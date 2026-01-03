@@ -26,14 +26,21 @@ Project memory keeps persistent guidance (steering, specs notes, component docs)
 
 ## Development Guidelines
 - Think in English, generate responses in Japanese. All Markdown content written to project files (e.g., requirements.md, design.md, tasks.md, research.md, validation reports) MUST be written in the target language configured for this specification (see spec.json.language).
+- **最重要: TDD/テスト運用（必須）**
+  - 基本方針として t_wada の TDD を採用する。
+    - 「テスト追加 → 失敗確認 → 実装 → テスト実行」をデフォルト手順とする。
+    - tasks.md のテストケース作成タスクは、あくまで最終チェック扱いとする。
+  - 変更範囲に応じて必ず Docker コマンドで該当テストを実行する。
+  - テストが全Passしたら、該当する `.kiro/specs/**/tasks.md` のタスクIDをチェックする。
 - テスト実行は Docker コンテナを使用する。
-- 基本方針として t_wada の TDD を採用する。
-- tasks.md のテストケース作成タスクは最終チェック扱いとする。
 - テストケースには「概要」と「目的」のコメントを必ず記載する。
 - Rails のテストは RSpec を使用する。
+- フロントエンドのテストはプロダクションコードと分離し、`/frontend/tests/` 配下に配置する。
 - テスト用コマンドは以下で統一する（Docker コンテナ実行）:
   - 全件: `docker compose run --rm -e BUNDLE_DEPLOYMENT=false -e BUNDLE_FROZEN=false -e RAILS_ENV=test backend sh -c "bundle install && bin/rails db:prepare && bundle exec rspec"`
   - 単体: `docker compose run --rm -e BUNDLE_DEPLOYMENT=false -e BUNDLE_FROZEN=false -e RAILS_ENV=test backend sh -c "bundle install && bin/rails db:prepare && bundle exec rspec spec/models/place_spec.rb"`
+  - フロントエンド全件: `docker compose run --rm frontend sh -c "npm install && npm test"`
+  - フロントエンド単体: `docker compose run --rm frontend sh -c "npm install && npm test -- tests/App.test.tsx"`
 
 ## Minimal Workflow
 - Phase 0 (optional): `/prompts:kiro-steering`, `/prompts:kiro-steering-custom`
