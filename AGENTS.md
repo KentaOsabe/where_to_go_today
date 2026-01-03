@@ -26,6 +26,14 @@ Project memory keeps persistent guidance (steering, specs notes, component docs)
 
 ## Development Guidelines
 - Think in English, generate responses in Japanese. All Markdown content written to project files (e.g., requirements.md, design.md, tasks.md, research.md, validation reports) MUST be written in the target language configured for this specification (see spec.json.language).
+- テスト実行は Docker コンテナを使用する。
+- 基本方針として t_wada の TDD を採用する。
+- tasks.md のテストケース作成タスクは最終チェック扱いとする。
+- テストケースには「概要」と「目的」のコメントを必ず記載する。
+- Rails のテストは RSpec を使用する。
+- テスト用コマンドは以下で統一する（Docker コンテナ実行）:
+  - 全件: `docker compose run --rm -e BUNDLE_DEPLOYMENT=false -e BUNDLE_FROZEN=false -e RAILS_ENV=test backend sh -c "bundle install && bin/rails db:prepare && bundle exec rspec"`
+  - 単体: `docker compose run --rm -e BUNDLE_DEPLOYMENT=false -e BUNDLE_FROZEN=false -e RAILS_ENV=test backend sh -c "bundle install && bin/rails db:prepare && bundle exec rspec spec/models/place_spec.rb"`
 
 ## Minimal Workflow
 - Phase 0 (optional): `/prompts:kiro-steering`, `/prompts:kiro-steering-custom`
