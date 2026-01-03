@@ -26,13 +26,14 @@ services:
       DATABASE_USERNAME: app
       DATABASE_PASSWORD: apppassword
       DATABASE_NAME: app_development
+      RAILS_ENV: development
       TZ: Asia/Tokyo
     volumes:
       - ./backend:/rails
     working_dir: /rails
     ports:
       - "30000:3000"
-    command: ["bin/rails", "server", "-b", "0.0.0.0", "-p", "3000"]
+    command: ["sh", "-c", "bin/rails db:migrate && bin/rails server -b 0.0.0.0 -p 3000"]
     depends_on:
       db:
         condition: service_healthy
