@@ -23,6 +23,7 @@ function App() {
   )
   const [isLoadingPlace, setIsLoadingPlace] = useState(false)
   const [placeLoadError, setPlaceLoadError] = useState<string | null>(null)
+  const isDetailView = routePlaceId !== null
 
   const navigateToPlace = (placeId: number) => {
     window.history.pushState(null, '', `/places/${placeId}`)
@@ -32,6 +33,9 @@ function App() {
   const navigateToForm = () => {
     window.history.pushState(null, '', '/')
     setRoutePlaceId(null)
+    setActivePlace(null)
+    setPlaceLoadError(null)
+    setIsLoadingPlace(false)
   }
 
   const {
@@ -61,6 +65,7 @@ function App() {
     if (routePlaceId === null) {
       setActivePlace(null)
       setPlaceLoadError(null)
+      setIsLoadingPlace(false)
       return
     }
     if (activePlace?.id === routePlaceId) {
@@ -100,19 +105,21 @@ function App() {
 
   return (
     <div className="app">
-      <main className="layout">
-        <HeroSection />
-        <PlaceForm
-          formState={formState}
-          errors={errors}
-          isSubmitting={isSubmitting}
-          submitError={submitError}
-          duplicatePlaceId={duplicatePlaceId}
-          onChange={handleChange}
-          onSubmit={handleSubmit}
-          onNavigateToDuplicate={navigateToPlace}
-        />
-        {(routePlaceId !== null || activePlace) && (
+      <main className={`layout ${isDetailView ? 'layout--detail' : ''}`.trim()}>
+        {!isDetailView && <HeroSection />}
+        {!isDetailView && (
+          <PlaceForm
+            formState={formState}
+            errors={errors}
+            isSubmitting={isSubmitting}
+            submitError={submitError}
+            duplicatePlaceId={duplicatePlaceId}
+            onChange={handleChange}
+            onSubmit={handleSubmit}
+            onNavigateToDuplicate={navigateToPlace}
+          />
+        )}
+        {isDetailView && (
           <PlaceResult
             activePlace={activePlace}
             isLoading={isLoadingPlace}
