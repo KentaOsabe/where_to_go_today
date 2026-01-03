@@ -1,0 +1,22 @@
+{
+  "feature_name": "register_place",
+  "created_at": "2026-01-03T06:07:53Z",
+  "updated_at": "2026-01-03T06:47:35Z",
+  "language": "ja",
+  "phase": "tasks",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true
+}
