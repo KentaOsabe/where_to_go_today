@@ -6,12 +6,14 @@
 - Task 1.3: 登録APIの応答とエラーハンドリングを整備する
 - Task 2.1: 登録フォームの入力フローを組み立てる
 - Task 2.2: フロントのバリデーションとエラー表示を実装する
+- Task 2.3: 登録API連携と登録結果の提示を実装する
 
 ## 結論
 - Task 1.1 は完了済み。Task 1.2 も要件/設計どおりに実装されており、完了と判断できる。
 - Task 1.3 も要件/設計どおりに実装されており、完了と判断できる。
 - Task 2.1 も要件/設計どおりに実装されており、完了と判断できる。
 - Task 2.2 も要件/設計どおりに実装されており、完了と判断できる。
+- Task 2.3 も要件/設計どおりに実装されており、完了と判断できる。
 
 ## 実装確認
 - スキーマ: `backend/db/migrate/20260103090000_create_places.rb`
@@ -39,7 +41,7 @@
   - 登録成功、バリデーション失敗、URL重複の応答を RSpec で検証
 
 ### Task 2.1 (フロント)
-- フォーム構成: `frontend/src/App.tsx`
+- フォーム構成: `frontend/src/components/PlaceForm.tsx`
   - 必須項目（店名/食べログURL/来店ステータス）と任意項目を分離して表示
   - 任意項目は `details` 要素で折りたたみ可能
   - 来店ステータスの既定値は `not_visited`
@@ -50,22 +52,42 @@
   - 1画面完結の入力フローを意識したレイアウト
 
 ### Task 2.2 (フロント)
-- バリデーション: `frontend/src/App.tsx`
+- バリデーション: `frontend/src/lib/validation.ts`
   - 必須項目（店名/食べログURL/来店ステータス）の未入力検知
   - `tabelog.com` ドメインのみ許可するURL検証
+- 入力/エラー表示: `frontend/src/components/PlaceForm.tsx`
   - フィールド単位のエラー状態と `aria-invalid` / `aria-describedby` を付与
   - 入力変更時に該当エラーのみを解除
-- エラー表示: `frontend/src/App.tsx`
+- エラー表示: `frontend/src/components/PlaceForm.tsx`
   - フィールド直下に理由を表示（`role="alert"`）
   - 食べログURLの補足は通常時も表示
 - スタイル: `frontend/src/App.css`
   - エラーメッセージ色とエラーフィールドの強調を追加
-- テスト: `frontend/src/App.test.tsx`
+- テスト: `frontend/tests/lib/validation.test.ts`, `frontend/tests/App.test.tsx`
   - 必須未入力時のエラー表示
   - `tabelog.com` 以外のURLを拒否し理由を表示
 
+### Task 2.3 (フロント)
+- API連携: `frontend/src/api/places.ts`
+  - `POST /api/places` の成功/重複/バリデーション/失敗を結果型で返却
+  - `GET /api/places/:id` を取得関数で提供
+- 登録フロー: `frontend/src/hooks/useRegisterPlace.ts`
+  - 登録成功時に `onSuccess` を呼び出し、画面遷移へ接続
+  - 409時は既存IDを保持し、重複案内の表示に連携
+  - 422時はフィールド別エラーを表示
+- 登録結果表示: `frontend/src/components/PlaceResult.tsx`
+  - 登録後の詳細を表示（必須/任意項目）
+  - 取得中/取得失敗の状態を表示
+- 遷移/取得: `frontend/src/App.tsx`
+  - 登録後は `/places/:id` に遷移し、遷移先で結果を取得して表示
+  - ブラウザ戻る操作でルートを反映
+- テスト: `frontend/tests/api/places.test.ts`, `frontend/tests/hooks/useRegisterPlace.test.tsx`, `frontend/tests/components/PlaceResult.test.tsx`
+  - API結果判定（成功/重複/バリデーション/失敗）
+  - 成功時コールバックと重複時の状態保持
+  - 登録結果の表示/エラー表示
+
 ## ギャップ/懸念
-- なし（Task 2.2 を含む要件・設計に対する未実装は確認できず）。
+- なし（Task 2.3 を含む要件・設計に対する未実装は確認できず）。
 
 ## 次のアクション
-- Task 2.3（登録API連携と登録結果の提示）に着手
+- Task 3.1（登録後の詳細表示を参照専用で提供する）に着手
