@@ -106,6 +106,12 @@ export const useRegisterPlace = ({ onSuccess }: UseRegisterPlaceOptions) => {
     }
   }
 
+  const resetFeedback = () => {
+    setErrors({})
+    setSubmitError(null)
+    setDuplicatePlaceId(null)
+  }
+
   return {
     formState,
     errors,
@@ -114,5 +120,6 @@ export const useRegisterPlace = ({ onSuccess }: UseRegisterPlaceOptions) => {
     duplicatePlaceId,
     handleChange,
     handleSubmit,
+    resetFeedback,
   }
 }

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, vi } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import App from '../src/App'
@@ -76,5 +76,60 @@ describe('App', () => {
 
     expect(await screen.findByText('登録結果')).toBeInTheDocument()
     expect(await screen.findByText('テスト店')).toBeInTheDocument()
+  })
+
+  it('詳細から戻るとエラー表示がリセットされる', async () => {
+    // 概要: 詳細表示からフォームに戻った際にエラー表示が残らないことを確認する
+    // 目的: 新規登録開始時に不要なエラーが表示されないことを保証する
+    globalThis.fetch = vi.fn().mockImplementation((input) => {
+      if (typeof input === 'string' && input.startsWith('/api/places/')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: vi.fn().mockResolvedValue(mockPlace),
+        } as unknown as Response)
+      }
+      return Promise.resolve({
+        ok: false,
+        status: 409,
+        json: vi
+          .fn()
+          .mockResolvedValue({
+            errors: { tabelog_url: ['すでに登録されています'] },
+            existing_place_id: 1,
+          }),
+      } as unknown as Response)
+    })
+
+    render(<App />)
+    const user = userEvent.setup()
+
+    await user.type(screen.getByLabelText('店名'), 'テスト店')
+    await user.type(
+      screen.getByLabelText(/食べログURL/),
+      'https://tabelog.com/tokyo/0000'
+    )
+    await user.click(screen.getByRole('button', { name: '登録する' }))
+
+    expect(screen.getByText('すでに登録されたURLです。')).toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole('button', { name: '登録済みデータを確認する' })
+    )
+
+    expect(await screen.findByText('登録結果')).toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole('button', { name: '新しく登録する' })
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText('すでに登録されたURLです。')
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByText('このURLはすでに登録されています。')
+      ).not.toBeInTheDocument()
+    })
   })
 })

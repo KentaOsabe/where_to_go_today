@@ -30,14 +30,6 @@ function App() {
     setRoutePlaceId(placeId)
   }
 
-  const navigateToForm = () => {
-    window.history.pushState(null, '', '/')
-    setRoutePlaceId(null)
-    setActivePlace(null)
-    setPlaceLoadError(null)
-    setIsLoadingPlace(false)
-  }
-
   const {
     formState,
     errors,
@@ -46,12 +38,22 @@ function App() {
     duplicatePlaceId,
     handleChange,
     handleSubmit,
+    resetFeedback,
   } = useRegisterPlace({
     onSuccess: (place) => {
       setActivePlace(place)
       navigateToPlace(place.id)
     },
   })
+
+  const navigateToForm = () => {
+    window.history.pushState(null, '', '/')
+    setRoutePlaceId(null)
+    setActivePlace(null)
+    setPlaceLoadError(null)
+    setIsLoadingPlace(false)
+    resetFeedback()
+  }
 
   useEffect(() => {
     const handlePopState = () => {
