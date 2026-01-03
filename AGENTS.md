@@ -34,6 +34,8 @@ Project memory keeps persistent guidance (steering, specs notes, component docs)
 - テスト用コマンドは以下で統一する（Docker コンテナ実行）:
   - 全件: `docker compose run --rm -e BUNDLE_DEPLOYMENT=false -e BUNDLE_FROZEN=false -e RAILS_ENV=test backend sh -c "bundle install && bin/rails db:prepare && bundle exec rspec"`
   - 単体: `docker compose run --rm -e BUNDLE_DEPLOYMENT=false -e BUNDLE_FROZEN=false -e RAILS_ENV=test backend sh -c "bundle install && bin/rails db:prepare && bundle exec rspec spec/models/place_spec.rb"`
+  - フロントエンド全件: `docker compose run --rm frontend sh -c "npm install && npm test"`
+  - フロントエンド単体: `docker compose run --rm frontend sh -c "npm install && npm test -- src/App.test.tsx"`
 
 ## Minimal Workflow
 - Phase 0 (optional): `/prompts:kiro-steering`, `/prompts:kiro-steering-custom`

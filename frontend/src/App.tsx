@@ -12,6 +12,8 @@ type FormState = {
   note: string
 }
 
+type FormErrors = Partial<Record<keyof FormState, string>>
+
 const initialState: FormState = {
   name: '',
   tabelog_url: '',
@@ -24,6 +26,37 @@ const initialState: FormState = {
 
 function App() {
   const [formState, setFormState] = useState<FormState>(initialState)
+  const [errors, setErrors] = useState<FormErrors>({})
+
+  const isTabelogUrl = (value: string) => {
+    try {
+      const url = new URL(value)
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        return false
+      }
+      const host = url.hostname.toLowerCase()
+      return host === 'tabelog.com' || host.endsWith('.tabelog.com')
+    } catch {
+      return false
+    }
+  }
+
+  const validateForm = (state: FormState) => {
+    const nextErrors: FormErrors = {}
+    if (!state.name.trim()) {
+      nextErrors.name = '店名を入力してください'
+    }
+    const tabelogUrl = state.tabelog_url.trim()
+    if (!tabelogUrl) {
+      nextErrors.tabelog_url = '食べログURLを入力してください'
+    } else if (!isTabelogUrl(tabelogUrl)) {
+      nextErrors.tabelog_url = 'tabelog.com ドメインのURLを入力してください'
+    }
+    if (!state.visit_status) {
+      nextErrors.visit_status = '来店ステータスを選択してください'
+    }
+    return nextErrors
+  }
 
   const handleChange = (
     event:
@@ -36,10 +69,25 @@ function App() {
       ...prev,
       [name]: value,
     }))
+    setErrors((prev) => {
+      const fieldName = name as keyof FormState
+      if (!prev[fieldName]) {
+        return prev
+      }
+      const next = { ...prev }
+      delete next[fieldName]
+      return next
+    })
   }
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    const nextErrors = validateForm(formState)
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors)
+      return
+    }
+    setErrors({})
   }
 
   return (
@@ -81,7 +129,7 @@ function App() {
               </div>
 
               <div className="field-grid">
-                <label className="field">
+                <label className={`field ${errors.name ? 'field--error' : ''}`}>
                   <span>店名</span>
                   <input
                     name="name"
@@ -92,10 +140,21 @@ function App() {
                     onChange={handleChange}
                     required
                     autoFocus
+                    aria-invalid={Boolean(errors.name)}
+                    aria-describedby={errors.name ? 'name-error' : undefined}
                   />
+                  {errors.name && (
+                    <small id="name-error" className="field-error" role="alert">
+                      {errors.name}
+                    </small>
+                  )}
                 </label>
 
-                <label className="field field--wide">
+                <label
+                  className={`field field--wide ${
+                    errors.tabelog_url ? 'field--error' : ''
+                  }`}
+                >
                   <span>食べログURL</span>
                   <input
                     name="tabelog_url"
@@ -104,20 +163,50 @@ function App() {
                     value={formState.tabelog_url}
                     onChange={handleChange}
                     required
+                    aria-invalid={Boolean(errors.tabelog_url)}
+                    aria-describedby={
+                      errors.tabelog_url ? 'tabelog-url-error' : undefined
+                    }
                   />
-                  <small>tabelog.com ドメインのみ登録できます</small>
+                  {errors.tabelog_url && (
+                    <small
+                      id="tabelog-url-error"
+                      className="field-error"
+                      role="alert"
+                    >
+                      {errors.tabelog_url}
+                    </small>
+                  )}
+                  <small className="field-note">
+                    tabelog.com ドメインのみ登録できます
+                  </small>
                 </label>
 
-                <label className="field">
+                <label
+                  className={`field ${errors.visit_status ? 'field--error' : ''}`}
+                >
                   <span>来店ステータス</span>
                   <select
                     name="visit_status"
                     value={formState.visit_status}
                     onChange={handleChange}
+                    aria-invalid={Boolean(errors.visit_status)}
+                    aria-describedby={
+                      errors.visit_status ? 'visit-status-error' : undefined
+                    }
                   >
                     <option value="not_visited">行っていない</option>
                     <option value="visited">行った</option>
                   </select>
+                  {errors.visit_status && (
+                    <small
+                      id="visit-status-error"
+                      className="field-error"
+                      role="alert"
+                    >
+                      {errors.visit_status}
+                    </small>
+                  )}
                 </label>
               </div>
             </div>

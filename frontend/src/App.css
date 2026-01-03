@@ -210,6 +210,24 @@
   font-size: 0.82rem;
 }
 
+.field-note {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.field-error {
+  color: #b54034;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.field--error input,
+.field--error select,
+.field--error textarea {
+  border-color: #c44a3b;
+  box-shadow: 0 0 0 3px rgba(196, 74, 59, 0.18);
+}
+
 .field--wide {
   grid-column: span 2;
 }
