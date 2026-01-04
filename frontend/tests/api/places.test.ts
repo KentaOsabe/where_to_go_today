@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createPlace, fetchPlace } from '../../src/api/places'
+import { createPlace, fetchPlace, fetchPlaces } from '../../src/api/places'
 import type { FormState, Place } from '../../src/types/place'
 
 const mockFetch = (
@@ -117,5 +117,59 @@ describe('api/places', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     await expect(fetchPlace(1)).rejects.toThrow('Failed to load place')
+  })
+
+  it('一覧取得で成功した場合に一覧とページング情報を返す', async () => {
+    // 概要: 一覧取得APIが成功した場合に結果を返す
+    // 目的: 取得した一覧とページング情報を画面で扱えるようにする
+    const response = {
+      places: [
+        {
+          id: 1,
+          name: 'テスト店',
+          tabelog_url: 'https://tabelog.com/tokyo/0000',
+          visit_status: 'not_visited',
+          genre: null,
+          area: null,
+          price_range: null,
+          note: null,
+          created_at: '2026-01-03T00:00:00Z',
+          updated_at: '2026-01-03T00:00:00Z',
+        },
+      ],
+      pagination: {
+        page: 2,
+        per: 10,
+        total_count: 1,
+        total_pages: 1,
+      },
+    }
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue(response),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await fetchPlaces({ page: 2, per: 10 })
+
+    expect(result).toEqual(response)
+    expect(fetchMock).toHaveBeenCalledWith('/api/places?page=2&per=10')
+  })
+
+  it('一覧取得で失敗した場合に例外を投げる', async () => {
+    // 概要: 一覧取得APIが失敗した場合に例外を投げる
+    // 目的: 取得失敗時にUI側でエラーを表示できるようにする
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: vi.fn().mockResolvedValue({}),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(fetchPlaces({ page: 1, per: 50 })).rejects.toThrow(
+      'Failed to load places'
+    )
   })
 })

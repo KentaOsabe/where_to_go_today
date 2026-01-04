@@ -16,15 +16,15 @@
   - 空配列でも `pagination` を返す
   - _Requirements: 1.1_
 
-- [ ] 2. フロントエンドのルーティングとAPI連携を整備する
-- [ ] 2.1 React Router を導入し画面遷移を構成する
+- [x] 2. フロントエンドのルーティングとAPI連携を整備する
+- [x] 2.1 React Router を導入し画面遷移を構成する
   - `/` は `/places` にリダイレクト
   - `/places` を一覧画面に割り当てる
   - `/places/:id` を詳細画面に割り当てる
   - `/register` を登録フォームに割り当てる
   - _Requirements: 1.1, 3.1, 3.2_
 
-- [ ] 2.2 一覧取得APIクライアントを追加する
+- [x] 2.2 一覧取得APIクライアントを追加する
   - `fetchPlaces({ page, per })` を実装する
   - _Requirements: 1.1_
 

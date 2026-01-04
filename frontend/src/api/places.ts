@@ -1,4 +1,9 @@
-import type { ApiErrorResponse, FormState, Place } from '../types/place'
+import type {
+  ApiErrorResponse,
+  FormState,
+  Place,
+  PlacesResponse,
+} from '../types/place'
 
 type CreatePlaceResult =
   | { type: 'success'; place: Place }
@@ -54,4 +59,34 @@ export const fetchPlace = async (placeId: number): Promise<Place> => {
     throw new Error('Failed to load place')
   }
   return (await response.json()) as Place
+}
+
+type FetchPlacesParams = {
+  page?: number
+  per?: number
+}
+
+export const fetchPlaces = async ({
+  page,
+  per,
+}: FetchPlacesParams = {}): Promise<PlacesResponse> => {
+  const params = new URLSearchParams()
+  if (page !== undefined) {
+    params.set('page', String(page))
+  }
+  if (per !== undefined) {
+    params.set('per', String(per))
+  }
+  const query = params.toString()
+
+  const response = await fetch(`/api/places${query ? `?${query}` : ''}`)
+  if (!response.ok) {
+    throw new Error('Failed to load places')
+  }
+
+  const data = await parseJson<PlacesResponse>(response)
+  if (!data) {
+    throw new Error('Failed to load places')
+  }
+  return data
 }
