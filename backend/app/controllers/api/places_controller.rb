@@ -20,6 +20,26 @@ module Api
       render json: place
     end
 
+    def index
+      page = page_param
+      per = per_param
+      offset = (page - 1) * per
+
+      places = Place.order(created_at: :desc).offset(offset).limit(per)
+      total_count = Place.count
+      total_pages = (total_count.to_f / per).ceil
+
+      render json: {
+        places: places,
+        pagination: {
+          page: page,
+          per: per,
+          total_count: total_count,
+          total_pages: total_pages
+        }
+      }
+    end
+
     private
 
     def place_params
@@ -32,6 +52,17 @@ module Api
         :price_range,
         :note
       )
+    end
+
+    def page_param
+      value = params[:page].present? ? params[:page].to_i : 1
+      value < 1 ? 1 : value
+    end
+
+    def per_param
+      value = params[:per].present? ? params[:per].to_i : 50
+      value = 1 if value < 1
+      value > 50 ? 50 : value
     end
 
     def render_validation_errors(place)
