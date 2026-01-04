@@ -153,6 +153,28 @@ RSpec.describe "Api::Places", type: :request do
       expect(body["errors"]["name"]).to include("can't be blank")
     end
 
+    it "returns validation errors for non tabelog domain" do
+      # 概要: tabelog.com 以外のURLで422が返ることを確認する
+      # 目的: 更新時もURLドメイン制約が機能することを担保する
+      place = Place.create!(
+        name: "更新前",
+        tabelog_url: "https://tabelog.com/tokyo/A0004006",
+        visit_status: "not_visited"
+      )
+
+      params = {
+        name: "更新後",
+        tabelog_url: "https://example.com/shop",
+        visit_status: "visited"
+      }
+
+      patch "/api/places/#{place.id}", params: params, as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      body = JSON.parse(response.body)
+      expect(body["errors"]["tabelog_url"]).to include("はtabelog.com ドメインのURLを入力してください")
+    end
+
     it "returns existing place when duplicate url" do
       # 概要: URL重複時に409と既存IDが返ることを確認する
       # 目的: 更新時も重複エラーの情報が返ることを担保する

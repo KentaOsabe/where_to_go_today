@@ -4,9 +4,9 @@ import { PlaceResult } from '../../src/components/PlaceResult'
 import type { Place } from '../../src/types/place'
 
 describe('PlaceResult', () => {
-  it('登録結果を表示する', () => {
-    // 概要: 登録済みの店舗情報が表示されることを確認する
-    // 目的: 登録後の詳細確認ができることを保証する
+  it('店舗詳細を表示する', () => {
+    // 概要: 店舗詳細の情報が表示されることを確認する
+    // 目的: 詳細画面で登録済み情報を確認できることを保証する
     const place: Place = {
       id: 1,
       name: 'テスト店',
@@ -25,7 +25,7 @@ describe('PlaceResult', () => {
         activePlace={place}
         isLoading={false}
         error={null}
-        onBackToForm={() => undefined}
+        actions={<button type="button">編集</button>}
       />
     )
 
@@ -42,7 +42,6 @@ describe('PlaceResult', () => {
         activePlace={null}
         isLoading={false}
         error="取得に失敗しました"
-        onBackToForm={() => undefined}
       />
     )
 
