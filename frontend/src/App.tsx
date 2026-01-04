@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import './App.css'
+import { EditPlaceScreen } from './screens/EditPlaceScreen'
 import { PlaceDetailScreen } from './screens/PlaceDetailScreen'
 import { PlacesListScreen } from './screens/PlacesListScreen'
 import { RegisterPlaceScreen } from './screens/RegisterPlaceScreen'
@@ -17,20 +18,13 @@ function App() {
     navigate(`/places/${placeId}`)
   }
 
-  const handleBackToRegister = () => {
-    registerState.resetFeedback()
-    navigate('/register')
-  }
-
   return (
     <div className="app">
       <Routes>
         <Route path="/" element={<Navigate to="/places" replace />} />
         <Route path="/places" element={<PlacesListScreen />} />
-        <Route
-          path="/places/:id"
-          element={<PlaceDetailScreen onBackToForm={handleBackToRegister} />}
-        />
+        <Route path="/places/:id/edit" element={<EditPlaceScreen />} />
+        <Route path="/places/:id" element={<PlaceDetailScreen />} />
         <Route
           path="/register"
           element={

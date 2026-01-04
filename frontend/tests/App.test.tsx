@@ -152,7 +152,7 @@ describe('App', () => {
     ).toBeInTheDocument()
     expect(await screen.findByText('テスト店')).toBeInTheDocument()
     expect(await screen.findByText('行っていない')).toBeInTheDocument()
-    expect(screen.queryByText('登録結果')).not.toBeInTheDocument()
+    expect(screen.queryByText('店舗詳細')).not.toBeInTheDocument()
 
     const postCall = fetchMock.mock.calls.find(([, options]) => {
       const method = (options as RequestInit | undefined)?.method
@@ -172,9 +172,9 @@ describe('App', () => {
     })
   })
 
-  it('詳細ルートでは登録結果のみを表示する', async () => {
+  it('詳細ルートでは店舗詳細のみを表示する', async () => {
     // 概要: /places/:id 直アクセス時に詳細表示専用の画面になることを確認する
-    // 目的: 登録結果の確認ビューがフォームと分離されていることを保証する
+    // 目的: 店舗詳細ビューがフォームと分離されていることを保証する
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue(mockPlace),
@@ -188,64 +188,91 @@ describe('App', () => {
     ).not.toBeInTheDocument()
     expect(screen.queryByLabelText('店名')).not.toBeInTheDocument()
 
-    expect(await screen.findByText('登録結果')).toBeInTheDocument()
+    expect(await screen.findByText('店舗詳細')).toBeInTheDocument()
     expect(await screen.findByText('テスト店')).toBeInTheDocument()
   })
 
-  it('詳細から戻るとエラー表示がリセットされる', async () => {
-    // 概要: 詳細表示からフォームに戻った際にエラー表示が残らないことを確認する
-    // 目的: 新規登録開始時に不要なエラーが表示されないことを保証する
-    const fetchMock = vi.fn().mockImplementation((input) => {
-      if (typeof input === 'string' && input.startsWith('/api/places/')) {
+  it('詳細画面に編集/削除アクションを表示する', async () => {
+    // 概要: 詳細画面で編集・削除ボタンが表示されることを確認する
+    // 目的: 詳細画面の操作導線が提供されることを保証する
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(mockPlace),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderApp('/places/1')
+
+    expect(await screen.findByRole('button', { name: '編集' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '削除' })).toBeInTheDocument()
+  })
+
+  it('削除確認ダイアログで再試行できる', async () => {
+    // 概要: 削除確認後に失敗した場合でも再試行できることを確認する
+    // 目的: 削除失敗時にユーザーがやり直せる導線を提供できるようにする
+    let deleteCallCount = 0
+    const fetchMock = vi.fn().mockImplementation((input, options) => {
+      const method = (options as RequestInit | undefined)?.method ?? 'GET'
+      const url = typeof input === 'string' ? input : input.url
+
+      if (method === 'GET' && url === '/api/places/1') {
         return Promise.resolve({
           ok: true,
           status: 200,
           json: vi.fn().mockResolvedValue(mockPlace),
         } as unknown as Response)
       }
-      return Promise.resolve({
-        ok: false,
-        status: 409,
-        json: vi
-          .fn()
-          .mockResolvedValue({
-            errors: { tabelog_url: ['すでに登録されています'] },
-            existing_place_id: 1,
+
+      if (method === 'DELETE' && url === '/api/places/1') {
+        deleteCallCount += 1
+        if (deleteCallCount === 1) {
+          return Promise.resolve({
+            ok: false,
+            status: 500,
+            json: vi.fn().mockResolvedValue({}),
+          } as unknown as Response)
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 204,
+        } as unknown as Response)
+      }
+
+      if (method === 'GET' && url.startsWith('/api/places')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: vi.fn().mockResolvedValue({
+            places: [],
+            pagination: { page: 1, per: 20, total_count: 0, total_pages: 0 },
           }),
-      } as unknown as Response)
+        } as unknown as Response)
+      }
+
+      return Promise.reject(new Error('Unexpected fetch'))
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    renderApp()
+    renderApp('/places/1')
     const user = userEvent.setup()
 
-    await user.type(screen.getByLabelText('店名'), 'テスト店')
-    await user.type(
-      screen.getByLabelText(/食べログURL/),
-      'https://tabelog.com/tokyo/0000'
-    )
-    await user.click(screen.getByRole('button', { name: '登録する' }))
+    await screen.findByText('店舗詳細')
+    await user.click(screen.getByRole('button', { name: '削除' }))
 
-    expect(screen.getByText('すでに登録されたURLです。')).toBeInTheDocument()
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
 
-    await user.click(
-      screen.getByRole('button', { name: '登録済みデータを確認する' })
-    )
+    await user.click(screen.getByRole('button', { name: '削除する' }))
 
-    expect(await screen.findByText('登録結果')).toBeInTheDocument()
+    expect(
+      await screen.findByText(
+        '削除に失敗しました。時間をおいて再度お試しください。'
+      )
+    ).toBeInTheDocument()
 
-    await user.click(
-      screen.getByRole('button', { name: '新しく登録する' })
-    )
+    await user.click(screen.getByRole('button', { name: '再試行する' }))
 
-    await waitFor(() => {
-      expect(
-        screen.queryByText('すでに登録されたURLです。')
-      ).not.toBeInTheDocument()
-      expect(
-        screen.queryByText('このURLはすでに登録されています。')
-      ).not.toBeInTheDocument()
-    })
+    expect(await screen.findByText('登録済みのお店')).toBeInTheDocument()
+    expect(deleteCallCount).toBe(2)
   })
 
   it('一覧画面上部の登録ボタンから登録フォームへ遷移できる', async () => {

@@ -7,6 +7,8 @@ type PlaceFormProps = {
   isSubmitting: boolean
   submitError: string | null
   duplicatePlaceId: number | null
+  submitLabel?: string
+  actionSubText?: string
   onChange: (
     event:
       | ChangeEvent<HTMLInputElement>
@@ -23,6 +25,8 @@ export const PlaceForm = ({
   isSubmitting,
   submitError,
   duplicatePlaceId,
+  submitLabel = '登録する',
+  actionSubText = 'Enter で登録、Shift + Tab で戻れます。',
   onChange,
   onSubmit,
   onNavigateToDuplicate,
@@ -164,7 +168,7 @@ export const PlaceForm = ({
       <div className="actions">
         <div>
           <p className="action-hint">入力内容は送信後も保持されます。</p>
-          <p className="action-sub">Enter で登録、Shift + Tab で戻れます。</p>
+          <p className="action-sub">{actionSubText}</p>
           {submitError && (
             <p className="form-alert form-alert--error" role="alert">
               {submitError}
@@ -184,7 +188,7 @@ export const PlaceForm = ({
           )}
         </div>
         <button className="primary" type="submit" disabled={isSubmitting}>
-          登録する
+          {submitLabel}
         </button>
       </div>
     </form>

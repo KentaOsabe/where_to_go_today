@@ -1,10 +1,13 @@
+import type { ReactNode } from 'react'
 import type { Place, VisitStatus } from '../types/place'
 
 type PlaceResultProps = {
   activePlace: Place | null
   isLoading: boolean
   error: string | null
-  onBackToForm: () => void
+  title?: string
+  caption?: string
+  actions?: ReactNode
 }
 
 const formatVisitStatus = (value: VisitStatus) =>
@@ -25,19 +28,19 @@ export const PlaceResult = ({
   activePlace,
   isLoading,
   error,
-  onBackToForm,
+  title = '店舗詳細',
+  caption,
+  actions,
 }: PlaceResultProps) => (
   <section className="result-card" aria-live="polite">
     <div className="result-header">
       <div>
-        <h2>登録結果</h2>
-        <p>保存された内容を確認できます。</p>
+        <h2>{title}</h2>
+        {caption && <p>{caption}</p>}
       </div>
-      <button type="button" className="ghost" onClick={onBackToForm}>
-        新しく登録する
-      </button>
+      {actions && <div className="result-actions">{actions}</div>}
     </div>
-    {isLoading && <p className="result-loading">登録結果を読み込み中です。</p>}
+    {isLoading && <p className="result-loading">店舗詳細を読み込み中です。</p>}
     {error && !isLoading && (
       <p className="form-alert form-alert--error" role="alert">
         {error}
