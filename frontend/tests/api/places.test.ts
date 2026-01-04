@@ -2,16 +2,21 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createPlace, fetchPlace } from '../../src/api/places'
 import type { FormState, Place } from '../../src/types/place'
 
-const mockFetch = (payload: unknown, options: { ok?: boolean; status?: number } = {}) => {
-  globalThis.fetch = vi.fn().mockResolvedValue({
+const mockFetch = (
+  payload: unknown,
+  options: { ok?: boolean; status?: number } = {}
+) => {
+  const fetchMock = vi.fn().mockResolvedValue({
     ok: options.ok ?? true,
     status: options.status ?? 200,
     json: vi.fn().mockResolvedValue(payload),
   } as unknown as Response)
+  vi.stubGlobal('fetch', fetchMock)
 }
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
 })
 
 describe('api/places', () => {
@@ -104,11 +109,12 @@ describe('api/places', () => {
   it('詳細取得で失敗した場合に例外を投げる', async () => {
     // 概要: 詳細取得APIが失敗した場合に例外を投げる
     // 目的: 取得失敗時にUI側でエラーを表示できるようにする
-    globalThis.fetch = vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
       ok: false,
       status: 404,
       json: vi.fn().mockResolvedValue({}),
     } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
 
     await expect(fetchPlace(1)).rejects.toThrow('Failed to load place')
   })
