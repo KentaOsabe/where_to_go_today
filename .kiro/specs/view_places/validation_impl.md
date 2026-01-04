@@ -45,6 +45,39 @@
 # 実装レビュー（validate-impl）
 
 ## 対象
+- Task 4.1: バックエンドの一覧取得を検証する（RSpec）
+- Task 4.2: フロントエンドの一覧表示を検証する（frontend/tests）
+
+## 結論
+- Task 4.1〜4.2 は要件/設計どおりにテストで担保されており、完了と判断できる。
+
+## 実装確認
+- バックエンドテスト: `backend/spec/requests/api/places_spec.rb`
+  - 複数件取得と `created_at` 降順を検証
+  - `page`/`per` のページングを検証
+  - 空配列でも `pagination` が返ることを検証
+- フロントエンドテスト: `frontend/tests/PlacesListScreen.test.tsx`
+  - 取得成功時の表示（一覧アイテム）を検証
+  - ローディング/空状態/エラー表示と再試行を検証
+  - 登録ボタンが `/register` への導線を持つことを検証
+- フロントエンドテスト: `frontend/tests/App.test.tsx`
+  - 登録導線（一覧画面上部ボタン）を検証
+
+## テスト実行
+- Backend: `docker compose run --rm -e BUNDLE_DEPLOYMENT=false -e BUNDLE_FROZEN=false -e RAILS_ENV=test backend sh -c "bundle install && bin/rails db:prepare && bundle exec rspec"`
+- Frontend: `docker compose run --rm frontend sh -c "npm install && npm test"`
+
+## ギャップ/懸念
+- なし
+
+## 次のアクション
+- なし
+
+---
+
+# 実装レビュー（validate-impl）
+
+## 対象
 - Task 3.1: 一覧画面の状態管理を実装する
 - Task 3.2: 一覧アイテムの表示を実装する
 - Task 3.3: 登録導線を追加する
