@@ -1,20 +1,167 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { fetchPlaces } from '../api/places'
+import type { Pagination, Place } from '../types/place'
 
-export const PlacesListScreen = () => (
-  <main className="layout layout--detail">
-    <section className="result-card">
-      <div className="result-header">
-        <div>
-          <h2>登録済みのお店</h2>
-          <p>一覧画面は準備中です。</p>
+const formatVisitStatus = (value: Place['visit_status']) =>
+  value === 'visited' ? '行った' : '行っていない'
+
+const normalizeValue = (value: string | null) => {
+  if (!value) {
+    return null
+  }
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+const buildOptionalInfo = (place: Place) => {
+  const note = normalizeValue(place.note)
+  const notePreview =
+    note && note.length > 60 ? `${note.slice(0, 60)}…` : note
+
+  const entries = [
+    { label: 'ジャンル', value: normalizeValue(place.genre) },
+    { label: 'エリア', value: normalizeValue(place.area) },
+    { label: '予算帯', value: normalizeValue(place.price_range) },
+    { label: 'メモ', value: notePreview },
+  ]
+
+  return entries.filter(
+    (entry): entry is { label: string; value: string } => Boolean(entry.value)
+  )
+}
+
+export const PlacesListScreen = () => {
+  const [places, setPlaces] = useState<Place[]>([])
+  const [pagination, setPagination] = useState<Pagination | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadPlaces = async () => {
+      setIsLoading(true)
+      setLoadError(null)
+      setPlaces([])
+      setPagination(null)
+
+      try {
+        const payload = await fetchPlaces()
+        if (cancelled) {
+          return
+        }
+        setPlaces(payload.places)
+        setPagination(payload.pagination)
+      } catch {
+        if (!cancelled) {
+          setLoadError(
+            '一覧を取得できませんでした。時間をおいて再度お試しください。'
+          )
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadPlaces()
+
+    return () => {
+      cancelled = true
+    }
+  }, [reloadKey])
+
+  const handleRetry = () => {
+    if (isLoading) {
+      return
+    }
+    setReloadKey((prev) => prev + 1)
+  }
+
+  const hasPlaces = places.length > 0
+
+  return (
+    <main className="layout layout--detail">
+      <section className="result-card" aria-live="polite">
+        <div className="result-header">
+          <div>
+            <h2>登録済みのお店</h2>
+            <p>候補を確認して今日の行き先を決めましょう。</p>
+          </div>
+          <Link className="ghost" to="/register">
+            お店を登録する
+          </Link>
         </div>
-        <Link className="ghost" to="/register">
-          お店を登録する
-        </Link>
-      </div>
-      <p className="result-loading">
-        現在は登録フォームから新しいお店を追加できます。
-      </p>
-    </section>
-  </main>
-)
+        {isLoading && (
+          <p className="result-loading">一覧を読み込み中です。</p>
+        )}
+        {loadError && !isLoading && (
+          <div className="form-alert form-alert--error" role="alert">
+            <p>{loadError}</p>
+            <button type="button" className="ghost" onClick={handleRetry}>
+              再試行する
+            </button>
+          </div>
+        )}
+        {!isLoading && !loadError && !hasPlaces && (
+          <div className="form-alert form-alert--warning">
+            <p>まだ登録がありません。</p>
+            <p>気になるお店を登録して一覧に追加しましょう。</p>
+            <Link className="ghost" to="/register">
+              お店を登録する
+            </Link>
+          </div>
+        )}
+        {!isLoading && !loadError && hasPlaces && (
+          <>
+            <p className="result-loading">
+              現在 {pagination?.total_count ?? places.length} 件のお店があります。
+            </p>
+            <ul className="places-list">
+              {places.map((place) => {
+                const optionalInfo = buildOptionalInfo(place)
+
+                return (
+                  <li key={place.id} className="places-list__item">
+                    <div className="places-list__header">
+                      <Link
+                        className="places-list__name"
+                        to={`/places/${place.id}`}
+                      >
+                        {place.name}
+                      </Link>
+                      <span className="status-pill places-list__status">
+                        {formatVisitStatus(place.visit_status)}
+                      </span>
+                    </div>
+                    <a
+                      className="places-list__url"
+                      href={place.tabelog_url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {place.tabelog_url}
+                    </a>
+                    {optionalInfo.length > 0 && (
+                      <dl className="places-list__meta">
+                        {optionalInfo.map((info) => (
+                          <div key={info.label}>
+                            <dt>{info.label}</dt>
+                            <dd>{info.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </>
+        )}
+      </section>
+    </main>
+  )
+}
