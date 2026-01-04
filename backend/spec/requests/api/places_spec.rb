@@ -97,6 +97,133 @@ RSpec.describe "Api::Places", type: :request do
     end
   end
 
+  describe "PATCH /api/places/:id" do
+    it "updates a place and returns payload" do
+      # 概要: 既存店舗を更新できることを確認する
+      # 目的: 更新成功時に最新の内容が返ることを担保する
+      place = Place.create!(
+        name: "更新前",
+        tabelog_url: "https://tabelog.com/tokyo/A0004001",
+        visit_status: "not_visited"
+      )
+
+      params = {
+        name: "更新後",
+        tabelog_url: "https://tabelog.com/tokyo/A0004001/",
+        visit_status: "visited",
+        genre: "和食",
+        area: "渋谷",
+        price_range: "¥¥",
+        note: "メモ"
+      }
+
+      patch "/api/places/#{place.id}", params: params, as: :json
+
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      expect(body["id"]).to eq(place.id)
+      expect(body["name"]).to eq("更新後")
+      expect(body["tabelog_url"]).to eq("https://tabelog.com/tokyo/A0004001")
+      expect(body["visit_status"]).to eq("visited")
+      expect(body["genre"]).to eq("和食")
+      expect(body["area"]).to eq("渋谷")
+      expect(body["price_range"]).to eq("¥¥")
+      expect(body["note"]).to eq("メモ")
+    end
+
+    it "returns validation errors" do
+      # 概要: 必須項目不足で422が返ることを確認する
+      # 目的: 更新時もバリデーション失敗が返ることを担保する
+      place = Place.create!(
+        name: "更新前",
+        tabelog_url: "https://tabelog.com/tokyo/A0004002",
+        visit_status: "not_visited"
+      )
+
+      params = {
+        name: "",
+        tabelog_url: "https://tabelog.com/tokyo/A0004002",
+        visit_status: "not_visited"
+      }
+
+      patch "/api/places/#{place.id}", params: params, as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      body = JSON.parse(response.body)
+      expect(body["errors"]["name"]).to include("can't be blank")
+    end
+
+    it "returns existing place when duplicate url" do
+      # 概要: URL重複時に409と既存IDが返ることを確認する
+      # 目的: 更新時も重複エラーの情報が返ることを担保する
+      existing = Place.create!(
+        name: "既存店舗",
+        tabelog_url: "https://tabelog.com/tokyo/A0004003",
+        visit_status: "visited"
+      )
+      place = Place.create!(
+        name: "更新対象",
+        tabelog_url: "https://tabelog.com/tokyo/A0004004",
+        visit_status: "not_visited"
+      )
+
+      params = {
+        name: "更新後",
+        tabelog_url: "https://tabelog.com/tokyo/A0004003/",
+        visit_status: "visited"
+      }
+
+      patch "/api/places/#{place.id}", params: params, as: :json
+
+      expect(response).to have_http_status(:conflict)
+      body = JSON.parse(response.body)
+      expect(body["errors"]["tabelog_url"]).to include("すでに登録されています")
+      expect(body["existing_place_id"]).to eq(existing.id)
+    end
+
+    it "returns not found when place is missing" do
+      # 概要: 存在しない店舗の更新で404が返ることを確認する
+      # 目的: 対象がない場合に適切なエラーを返すことを担保する
+      params = {
+        name: "更新後",
+        tabelog_url: "https://tabelog.com/tokyo/A0004005",
+        visit_status: "visited"
+      }
+
+      patch "/api/places/999999", params: params, as: :json
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  describe "DELETE /api/places/:id" do
+    it "deletes a place and returns no content" do
+      # 概要: 指定した店舗が削除されることを確認する
+      # 目的: 削除成功時に204が返ることを担保する
+      place = Place.create!(
+        name: "削除対象",
+        tabelog_url: "https://tabelog.com/tokyo/A0005001",
+        visit_status: "not_visited"
+      )
+
+      expect do
+        delete "/api/places/#{place.id}", as: :json
+      end.to change(Place, :count).by(-1)
+
+      expect(response).to have_http_status(:no_content)
+      expect(response.body).to be_blank
+      expect(Place.exists?(place.id)).to be(false)
+    end
+
+    it "returns not found when place is missing" do
+      # 概要: 存在しない店舗の削除で404が返ることを確認する
+      # 目的: 対象がない場合に適切なエラーを返すことを担保する
+      delete "/api/places/999999", as: :json
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe "GET /api/places" do
     before do
       Place.delete_all
