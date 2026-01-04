@@ -4,12 +4,16 @@ import userEvent from '@testing-library/user-event'
 import { useRegisterPlace } from '../../src/hooks/useRegisterPlace'
 import type { Place } from '../../src/types/place'
 
-const mockFetch = (payload: unknown, options: { ok?: boolean; status?: number } = {}) => {
-  globalThis.fetch = vi.fn().mockResolvedValue({
+const mockFetch = (
+  payload: unknown,
+  options: { ok?: boolean; status?: number } = {}
+) => {
+  const fetchMock = vi.fn().mockResolvedValue({
     ok: options.ok ?? true,
     status: options.status ?? 200,
     json: vi.fn().mockResolvedValue(payload),
   } as unknown as Response)
+  vi.stubGlobal('fetch', fetchMock)
 }
 
 const RegisterHarness = ({ onSuccess }: { onSuccess: (place: Place) => void }) => {
@@ -55,6 +59,7 @@ const RegisterHarness = ({ onSuccess }: { onSuccess: (place: Place) => void }) =
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
 })
 
 describe('useRegisterPlace', () => {

@@ -23,6 +23,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
   window.history.pushState(null, '', '/')
 })
 
@@ -58,14 +59,64 @@ describe('App', () => {
     ).toBeInTheDocument()
   })
 
+  it('必須項目のみで登録でき、結果が表示される', async () => {
+    // 概要: 必須項目のみ入力した場合に登録が成功し結果が表示されることを確認する
+    // 目的: 最小入力でも登録と確認が完了できることを保証する
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: vi.fn().mockResolvedValue({
+        id: 10,
+        name: 'テスト店',
+        tabelog_url: 'https://tabelog.com/tokyo/0000',
+        visit_status: 'not_visited',
+        genre: null,
+        area: null,
+        price_range: null,
+        note: null,
+        created_at: '2026-01-03T00:00:00Z',
+        updated_at: '2026-01-03T00:00:00Z',
+      }),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<App />)
+    const user = userEvent.setup()
+
+    await user.type(screen.getByLabelText('店名'), 'テスト店')
+    await user.type(
+      screen.getByLabelText(/食べログURL/),
+      'https://tabelog.com/tokyo/0000'
+    )
+    await user.click(screen.getByRole('button', { name: '登録する' }))
+
+    await screen.findByText('登録結果')
+    expect(screen.getByText('テスト店')).toBeInTheDocument()
+    expect(screen.getByText('行っていない')).toBeInTheDocument()
+    expect(screen.queryByText('ジャンル')).not.toBeInTheDocument()
+
+    const [, options] = fetchMock.mock.calls[0]
+    const body = JSON.parse((options as RequestInit).body as string)
+    expect(body).toMatchObject({
+      name: 'テスト店',
+      tabelog_url: 'https://tabelog.com/tokyo/0000',
+      visit_status: 'not_visited',
+      genre: '',
+      area: '',
+      price_range: '',
+      note: '',
+    })
+  })
+
   it('詳細ルートでは登録結果のみを表示する', async () => {
     // 概要: /places/:id 直アクセス時に詳細表示専用の画面になることを確認する
     // 目的: 登録結果の確認ビューがフォームと分離されていることを保証する
     window.history.pushState(null, '', '/places/1')
-    globalThis.fetch = vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue(mockPlace),
     } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
 
     render(<App />)
 
@@ -81,7 +132,7 @@ describe('App', () => {
   it('詳細から戻るとエラー表示がリセットされる', async () => {
     // 概要: 詳細表示からフォームに戻った際にエラー表示が残らないことを確認する
     // 目的: 新規登録開始時に不要なエラーが表示されないことを保証する
-    globalThis.fetch = vi.fn().mockImplementation((input) => {
+    const fetchMock = vi.fn().mockImplementation((input) => {
       if (typeof input === 'string' && input.startsWith('/api/places/')) {
         return Promise.resolve({
           ok: true,
@@ -100,6 +151,7 @@ describe('App', () => {
           }),
       } as unknown as Response)
     })
+    vi.stubGlobal('fetch', fetchMock)
 
     render(<App />)
     const user = userEvent.setup()

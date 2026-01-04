@@ -41,6 +41,38 @@ RSpec.describe "Api::Places", type: :request do
       expect(body["errors"]["name"]).to include("can't be blank")
     end
 
+    it "returns validation errors for missing tabelog_url" do
+      # 概要: 食べログURLが未入力で422が返ることを確認する
+      # 目的: 必須項目の未入力をAPIでも拒否できることを担保する
+      params = {
+        name: "テスト店舗",
+        tabelog_url: "",
+        visit_status: "not_visited"
+      }
+
+      post "/api/places", params: params, as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      body = JSON.parse(response.body)
+      expect(body["errors"]["tabelog_url"]).to include("can't be blank")
+    end
+
+    it "returns validation errors for non tabelog domain" do
+      # 概要: tabelog.com 以外のURLで422が返ることを確認する
+      # 目的: URLドメイン制約がAPIでも機能することを担保する
+      params = {
+        name: "テスト店舗",
+        tabelog_url: "https://example.com/shop",
+        visit_status: "not_visited"
+      }
+
+      post "/api/places", params: params, as: :json
+
+      expect(response).to have_http_status(:unprocessable_content)
+      body = JSON.parse(response.body)
+      expect(body["errors"]["tabelog_url"]).to include("はtabelog.com ドメインのURLを入力してください")
+    end
+
     it "returns existing place when duplicate url" do
       # 概要: URL重複時に409と既存IDが返ることを確認する
       # 目的: 重複登録時の案内情報を返すことを担保する
