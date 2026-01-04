@@ -134,7 +134,7 @@ RSpec.describe "Api::Places", type: :request do
       expect(body["pagination"]).to eq(
         {
           "page" => 1,
-          "per" => 50,
+          "per" => 20,
           "total_count" => 3,
           "total_pages" => 1
         }
@@ -221,7 +221,7 @@ RSpec.describe "Api::Places", type: :request do
       expect(body["pagination"]).to eq(
         {
           "page" => 1,
-          "per" => 50,
+          "per" => 20,
           "total_count" => 0,
           "total_pages" => 0
         }
