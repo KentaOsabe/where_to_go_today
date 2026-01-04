@@ -13,6 +13,6 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   namespace :api do
-    resources :places, only: %i[index create show]
+    resources :places, only: %i[index create show update destroy]
   end
 end

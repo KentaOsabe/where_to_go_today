@@ -1,21 +1,21 @@
 # タスク
 
-- [ ] 1. 更新/削除APIの基盤を追加する
-- [ ] 1.1 ルーティングに update/destroy を追加する
+- [x] 1. 更新/削除APIの基盤を追加する
+- [x] 1.1 ルーティングに update/destroy を追加する
   - `PATCH /api/places/:id` と `DELETE /api/places/:id` を追加する
   - _Requirements: 2.1, 2.3_
 
-- [ ] 1.2 更新APIのコントローラ処理を実装する
+- [x] 1.2 更新APIのコントローラ処理を実装する
   - `place.update(place_params)` で更新し成功時は JSON を返す
   - バリデーションエラーは 422 を返す
   - URL 重複は 409 + `existing_place_id` を返す（自分自身は除外）
   - _Requirements: 2.1, 3.1, 3.3_
 
-- [ ] 1.3 削除APIのコントローラ処理を実装する
+- [x] 1.3 削除APIのコントローラ処理を実装する
   - `destroy` 成功時は 204 を返す
   - _Requirements: 2.3, 5.2_
 
-- [ ] 1.4 404/例外ハンドリングを追加する
+- [x] 1.4 404/例外ハンドリングを追加する
   - `ActiveRecord::RecordNotFound` を捕捉し 404 を返す
   - _Requirements: 3.4, 2.5_
 
