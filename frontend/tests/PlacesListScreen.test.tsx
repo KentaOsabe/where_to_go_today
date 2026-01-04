@@ -127,4 +127,23 @@ describe('PlacesListScreen', () => {
     expect(screen.getByText('メモ')).toBeInTheDocument()
     expect(screen.getByText('メモ内容')).toBeInTheDocument()
   })
+
+  it('登録ボタンが/registerへの導線を持つ', async () => {
+    // 概要: 一覧画面の登録ボタンが/registerへ遷移できるリンクであることを確認する
+    // 目的: 登録導線が常に利用できるようにする
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(buildPlacesResponse([])),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderScreen()
+
+    const registerLinks = await screen.findAllByRole('link', {
+      name: 'お店を登録する',
+    })
+    registerLinks.forEach((link) => {
+      expect(link).toHaveAttribute('href', '/register')
+    })
+  })
 })
