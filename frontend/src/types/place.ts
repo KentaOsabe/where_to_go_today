@@ -25,6 +25,18 @@ export type Place = {
   updated_at: string
 }
 
+export type Pagination = {
+  page: number
+  per: number
+  total_count: number
+  total_pages: number
+}
+
+export type PlacesResponse = {
+  places: Place[]
+  pagination: Pagination
+}
+
 export type ApiErrorResponse = {
   errors?: Partial<Record<keyof FormState, string[]>>
   existing_place_id?: number

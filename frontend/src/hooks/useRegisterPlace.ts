@@ -9,6 +9,22 @@ type UseRegisterPlaceOptions = {
   onSuccess: (place: Place) => void
 }
 
+type RegisterFormChangeEvent =
+  | ChangeEvent<HTMLInputElement>
+  | ChangeEvent<HTMLTextAreaElement>
+  | ChangeEvent<HTMLSelectElement>
+
+export type RegisterPlaceState = {
+  formState: FormState
+  errors: FormErrors
+  isSubmitting: boolean
+  submitError: string | null
+  duplicatePlaceId: number | null
+  handleChange: (event: RegisterFormChangeEvent) => void
+  handleSubmit: (event: FormEvent<HTMLFormElement>) => void
+  resetFeedback: () => void
+}
+
 const mapApiErrors = (payload?: ApiErrorResponse): FormErrors => {
   if (!payload?.errors) {
     return {}
@@ -24,19 +40,16 @@ const mapApiErrors = (payload?: ApiErrorResponse): FormErrors => {
   )
 }
 
-export const useRegisterPlace = ({ onSuccess }: UseRegisterPlaceOptions) => {
+export const useRegisterPlace = ({
+  onSuccess,
+}: UseRegisterPlaceOptions): RegisterPlaceState => {
   const [formState, setFormState] = useState<FormState>(initialFormState)
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [duplicatePlaceId, setDuplicatePlaceId] = useState<number | null>(null)
 
-  const handleChange = (
-    event:
-      | ChangeEvent<HTMLInputElement>
-      | ChangeEvent<HTMLTextAreaElement>
-      | ChangeEvent<HTMLSelectElement>
-  ) => {
+  const handleChange = (event: RegisterFormChangeEvent) => {
     const { name, value } = event.target
     setFormState((prev) => ({
       ...prev,
