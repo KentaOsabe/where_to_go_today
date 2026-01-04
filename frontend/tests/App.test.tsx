@@ -105,7 +105,7 @@ describe('App', () => {
                 updated_at: '2026-01-03T00:00:00Z',
               },
             ],
-            pagination: { page: 1, per: 50, total_count: 1, total_pages: 1 },
+            pagination: { page: 1, per: 20, total_count: 1, total_pages: 1 },
           }),
         } as unknown as Response)
       }
@@ -129,7 +129,7 @@ describe('App', () => {
                 updated_at: '2026-01-03T00:00:00Z',
               },
             ],
-            pagination: { page: 1, per: 50, total_count: 1, total_pages: 1 },
+            pagination: { page: 1, per: 20, total_count: 1, total_pages: 1 },
           }),
         } as unknown as Response)
       }
@@ -268,7 +268,7 @@ describe('App', () => {
             updated_at: '2026-01-03T00:00:00Z',
           },
         ],
-        pagination: { page: 1, per: 50, total_count: 1, total_pages: 1 },
+        pagination: { page: 1, per: 20, total_count: 1, total_pages: 1 },
       }),
     } as unknown as Response)
     vi.stubGlobal('fetch', fetchMock)
@@ -293,7 +293,7 @@ describe('App', () => {
       places: [mockPlace],
       pagination: {
         page,
-        per: 50,
+        per: 20,
         total_count: 3,
         total_pages: totalPages,
       },
@@ -336,7 +336,7 @@ describe('App', () => {
       ok: true,
       json: vi.fn().mockResolvedValue({
         places: [mockPlace],
-        pagination: { page: 1, per: 50, total_count: 2, total_pages: 1 },
+        pagination: { page: 1, per: 20, total_count: 2, total_pages: 1 },
       }),
     } as unknown as Response)
     vi.stubGlobal('fetch', fetchMock)
@@ -348,5 +348,28 @@ describe('App', () => {
 
     expect(prevButton).toBeDisabled()
     expect(nextButton).toBeDisabled()
+  })
+
+  it('総件数がある場合は空状態を表示せずページングを維持する', async () => {
+    // 概要: 総件数が存在している場合は空配列でも空状態扱いにしない
+    // 目的: 範囲外ページでも戻る導線が消えないことを保証する
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        places: [],
+        pagination: { page: 5, per: 20, total_count: 10, total_pages: 2 },
+      }),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderApp('/places?page=5')
+
+    expect(
+      await screen.findByText('現在 10 件のお店があります。')
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText('まだ登録がありません。')
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '前へ' })).toBeEnabled()
   })
 })

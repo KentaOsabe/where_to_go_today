@@ -22,7 +22,7 @@ const buildPlacesResponse = (places: Place[]): PlacesResponse => ({
   places,
   pagination: {
     page: 1,
-    per: 50,
+    per: 20,
     total_count: places.length,
     total_pages: places.length === 0 ? 0 : 1,
   },

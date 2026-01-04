@@ -60,9 +60,9 @@ module Api
     end
 
     def per_param
-      value = params[:per].present? ? params[:per].to_i : 50
+      value = params[:per].present? ? params[:per].to_i : 20
       value = 1 if value < 1
-      value > 50 ? 50 : value
+      value > 20 ? 20 : value
     end
 
     def render_validation_errors(place)

@@ -95,7 +95,13 @@ export const PlacesListScreen = () => {
     setReloadKey((prev) => prev + 1)
   }
 
+  const totalCount = pagination?.total_count ?? 0
   const hasPlaces = places.length > 0
+  const hasAnyPlaces = totalCount > 0
+  const showEmptyState =
+    !isLoading && !loadError && pagination !== null && totalCount === 0
+  const showOutOfRangeState =
+    !isLoading && !loadError && pagination !== null && !hasPlaces && hasAnyPlaces
   const canGoPrev = currentPage > 1
   const canGoNext =
     pagination !== null && currentPage < pagination.total_pages
@@ -143,7 +149,7 @@ export const PlacesListScreen = () => {
             </button>
           </div>
         )}
-        {!isLoading && !loadError && !hasPlaces && (
+        {showEmptyState && (
           <div className="form-alert form-alert--warning">
             <p>まだ登録がありません。</p>
             <p>気になるお店を登録して一覧に追加しましょう。</p>
@@ -152,10 +158,16 @@ export const PlacesListScreen = () => {
             </Link>
           </div>
         )}
-        {!isLoading && !loadError && hasPlaces && (
+        {showOutOfRangeState && (
+          <div className="form-alert form-alert--warning">
+            <p>このページにはお店がありません。</p>
+            <p>前へボタンで前のページに戻ってください。</p>
+          </div>
+        )}
+        {!isLoading && !loadError && hasAnyPlaces && (
           <>
             <p className="result-loading">
-              現在 {pagination?.total_count ?? places.length} 件のお店があります。
+              現在 {totalCount} 件のお店があります。
             </p>
             <ul className="places-list">
               {places.map((place) => {

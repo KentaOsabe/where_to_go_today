@@ -15,7 +15,7 @@
 - ルーティング: `backend/config/routes.rb`
   - `GET /api/places` を追加
 - API: `backend/app/controllers/api/places_controller.rb`
-  - `page`/`per` は 1 以上に補正し、`per` は最大 50 にクランプ
+- `page`/`per` は 1 以上に補正し、`per` は最大 20 にクランプ
   - `created_at` 降順で取得し、`offset`/`limit` でページング
   - `places` と `pagination`（`page`/`per`/`total_count`/`total_pages`）を返却
 - テスト: `backend/spec/requests/api/places_spec.rb`

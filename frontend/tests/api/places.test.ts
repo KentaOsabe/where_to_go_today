@@ -168,7 +168,7 @@ describe('api/places', () => {
     } as unknown as Response)
     vi.stubGlobal('fetch', fetchMock)
 
-    await expect(fetchPlaces({ page: 1, per: 50 })).rejects.toThrow(
+    await expect(fetchPlaces({ page: 1, per: 20 })).rejects.toThrow(
       'Failed to load places'
     )
   })
