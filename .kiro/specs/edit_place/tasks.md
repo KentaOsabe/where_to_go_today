@@ -20,12 +20,12 @@
   - _Requirements: 3.4, 2.5_
 
 - [ ] 2. フロントエンドのAPI連携を追加する
-- [ ] 2.1 更新/削除 API クライアントを追加する
+- [x] 2.1 更新/削除 API クライアントを追加する
   - `updatePlace(placeId, payload)` を追加する
   - `deletePlace(placeId)` を追加する
   - _Requirements: 2.1, 2.3_
 
-- [ ] 2.2 更新/削除のエラー型を整備する
+- [x] 2.2 更新/削除のエラー型を整備する
   - 409/422/404 を判別できる戻り値にする
   - _Requirements: 2.5, 3.4_
 
