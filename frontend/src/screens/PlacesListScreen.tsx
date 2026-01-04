@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { fetchPlaces } from '../api/places'
 import type { Pagination, Place } from '../types/place'
 
@@ -31,12 +31,26 @@ const buildOptionalInfo = (place: Place) => {
   )
 }
 
+const parsePageParam = (value: string | null) => {
+  if (!value) {
+    return 1
+  }
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) {
+    return 1
+  }
+  const normalized = Math.floor(parsed)
+  return normalized >= 1 ? normalized : 1
+}
+
 export const PlacesListScreen = () => {
   const [places, setPlaces] = useState<Place[]>([])
   const [pagination, setPagination] = useState<Pagination | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const currentPage = parsePageParam(searchParams.get('page'))
 
   useEffect(() => {
     let cancelled = false
@@ -48,7 +62,7 @@ export const PlacesListScreen = () => {
       setPagination(null)
 
       try {
-        const payload = await fetchPlaces()
+        const payload = await fetchPlaces({ page: currentPage })
         if (cancelled) {
           return
         }
@@ -72,7 +86,7 @@ export const PlacesListScreen = () => {
     return () => {
       cancelled = true
     }
-  }, [reloadKey])
+  }, [currentPage, reloadKey])
 
   const handleRetry = () => {
     if (isLoading) {
@@ -82,6 +96,29 @@ export const PlacesListScreen = () => {
   }
 
   const hasPlaces = places.length > 0
+  const canGoPrev = currentPage > 1
+  const canGoNext =
+    pagination !== null && currentPage < pagination.total_pages
+
+  const updatePage = (nextPage: number) => {
+    const params = new URLSearchParams(searchParams)
+    params.set('page', String(nextPage))
+    setSearchParams(params)
+  }
+
+  const handlePrevPage = () => {
+    if (!canGoPrev) {
+      return
+    }
+    updatePage(currentPage - 1)
+  }
+
+  const handleNextPage = () => {
+    if (!canGoNext) {
+      return
+    }
+    updatePage(currentPage + 1)
+  }
 
   return (
     <main className="layout layout--detail">
@@ -159,6 +196,29 @@ export const PlacesListScreen = () => {
                 )
               })}
             </ul>
+            {pagination && (
+              <nav className="pagination" aria-label="ページ移動">
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={handlePrevPage}
+                  disabled={!canGoPrev}
+                >
+                  前へ
+                </button>
+                <span className="pagination__status">
+                  {pagination.page} / {pagination.total_pages}
+                </span>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={handleNextPage}
+                  disabled={!canGoNext}
+                >
+                  次へ
+                </button>
+              </nav>
+            )}
           </>
         )}
       </section>

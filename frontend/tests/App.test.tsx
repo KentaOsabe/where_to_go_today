@@ -62,14 +62,15 @@ describe('App', () => {
     ).toBeInTheDocument()
   })
 
-  it('必須項目のみで登録でき、結果が表示される', async () => {
-    // 概要: 必須項目のみ入力した場合に登録が成功し結果が表示されることを確認する
-    // 目的: 最小入力でも登録と確認が完了できることを保証する
-    const fetchMock = vi.fn().mockImplementation((input) => {
-      if (typeof input === 'string' && input.startsWith('/api/places/')) {
+  it('必須項目のみで登録でき、一覧へ遷移する', async () => {
+    // 概要: 必須項目のみ入力した場合に登録が成功し一覧画面へ遷移する
+    // 目的: 登録完了後に一覧で確認できることを保証する
+    const fetchMock = vi.fn().mockImplementation((input, options) => {
+      const method = (options as RequestInit | undefined)?.method
+      if (method === 'POST') {
         return Promise.resolve({
           ok: true,
-          status: 200,
+          status: 201,
           json: vi.fn().mockResolvedValue({
             id: 10,
             name: 'テスト店',
@@ -85,22 +86,54 @@ describe('App', () => {
         } as unknown as Response)
       }
 
-      return Promise.resolve({
-        ok: true,
-        status: 201,
-        json: vi.fn().mockResolvedValue({
-          id: 10,
-          name: 'テスト店',
-          tabelog_url: 'https://tabelog.com/tokyo/0000',
-          visit_status: 'not_visited',
-          genre: null,
-          area: null,
-          price_range: null,
-          note: null,
-          created_at: '2026-01-03T00:00:00Z',
-          updated_at: '2026-01-03T00:00:00Z',
-        }),
-      } as unknown as Response)
+      if (typeof input === 'string' && input.startsWith('/api/places?')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: vi.fn().mockResolvedValue({
+            places: [
+              {
+                id: 10,
+                name: 'テスト店',
+                tabelog_url: 'https://tabelog.com/tokyo/0000',
+                visit_status: 'not_visited',
+                genre: null,
+                area: null,
+                price_range: null,
+                note: null,
+                created_at: '2026-01-03T00:00:00Z',
+                updated_at: '2026-01-03T00:00:00Z',
+              },
+            ],
+            pagination: { page: 1, per: 50, total_count: 1, total_pages: 1 },
+          }),
+        } as unknown as Response)
+      }
+
+      if (typeof input === 'string' && input === '/api/places') {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: vi.fn().mockResolvedValue({
+            places: [
+              {
+                id: 10,
+                name: 'テスト店',
+                tabelog_url: 'https://tabelog.com/tokyo/0000',
+                visit_status: 'not_visited',
+                genre: null,
+                area: null,
+                price_range: null,
+                note: null,
+                created_at: '2026-01-03T00:00:00Z',
+                updated_at: '2026-01-03T00:00:00Z',
+              },
+            ],
+            pagination: { page: 1, per: 50, total_count: 1, total_pages: 1 },
+          }),
+        } as unknown as Response)
+      }
+      return Promise.reject(new Error('Unexpected fetch'))
     })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -114,10 +147,12 @@ describe('App', () => {
     )
     await user.click(screen.getByRole('button', { name: '登録する' }))
 
-    await screen.findByText('登録結果')
+    expect(
+      await screen.findByText('登録済みのお店')
+    ).toBeInTheDocument()
     expect(await screen.findByText('テスト店')).toBeInTheDocument()
     expect(await screen.findByText('行っていない')).toBeInTheDocument()
-    expect(screen.queryByText('ジャンル')).not.toBeInTheDocument()
+    expect(screen.queryByText('登録結果')).not.toBeInTheDocument()
 
     const postCall = fetchMock.mock.calls.find(([, options]) => {
       const method = (options as RequestInit | undefined)?.method
@@ -211,5 +246,107 @@ describe('App', () => {
         screen.queryByText('このURLはすでに登録されています。')
       ).not.toBeInTheDocument()
     })
+  })
+
+  it('一覧画面上部の登録ボタンから登録フォームへ遷移できる', async () => {
+    // 概要: 一覧画面の上部にある登録ボタンから登録フォームへ移動できる
+    // 目的: 一覧画面の登録導線が機能することを保証する
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        places: [
+          {
+            id: 1,
+            name: 'テスト店',
+            tabelog_url: 'https://tabelog.com/tokyo/0000',
+            visit_status: 'not_visited',
+            genre: null,
+            area: null,
+            price_range: null,
+            note: null,
+            created_at: '2026-01-03T00:00:00Z',
+            updated_at: '2026-01-03T00:00:00Z',
+          },
+        ],
+        pagination: { page: 1, per: 50, total_count: 1, total_pages: 1 },
+      }),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderApp('/places')
+    const user = userEvent.setup()
+
+    const registerLink = await screen.findByRole('link', {
+      name: 'お店を登録する',
+    })
+    await user.click(registerLink)
+
+    expect(
+      await screen.findByText('今日の候補を、最小入力で。')
+    ).toBeInTheDocument()
+  })
+
+  it('ページングの次へボタンでクエリと同期して再取得できる', async () => {
+    // 概要: 一覧画面で次へボタンを押すとページングの取得が行われる
+    // 目的: ?page= クエリと同期したページングが機能することを保証する
+    const buildResponse = (page: number, totalPages = 3) => ({
+      places: [mockPlace],
+      pagination: {
+        page,
+        per: 50,
+        total_count: 3,
+        total_pages: totalPages,
+      },
+    })
+    const fetchMock = vi.fn().mockImplementation((input) => {
+      const url = typeof input === 'string' ? input : input.url
+      if (url.startsWith('/api/places')) {
+        const match = url.match(/page=(\d+)/)
+        const page = match ? Number(match[1]) : 1
+        return Promise.resolve({
+          ok: true,
+          json: vi.fn().mockResolvedValue(buildResponse(page)),
+        } as unknown as Response)
+      }
+      return Promise.reject(new Error('Unexpected fetch'))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderApp('/places?page=2')
+    const user = userEvent.setup()
+
+    const nextButton = await screen.findByRole('button', { name: '次へ' })
+    expect(screen.getByRole('button', { name: '前へ' })).toBeEnabled()
+    expect(nextButton).toBeEnabled()
+
+    await user.click(nextButton)
+
+    await waitFor(() => {
+      const hasPage3 = fetchMock.mock.calls.some(
+        ([url]) => url === '/api/places?page=3'
+      )
+      expect(hasPage3).toBe(true)
+    })
+  })
+
+  it('ページ端では前へ/次へボタンが無効になる', async () => {
+    // 概要: ページングの最初と最後では前後ボタンが無効になる
+    // 目的: 範囲外への移動ができないことを保証する
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        places: [mockPlace],
+        pagination: { page: 1, per: 50, total_count: 2, total_pages: 1 },
+      }),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderApp('/places?page=1')
+
+    const prevButton = await screen.findByRole('button', { name: '前へ' })
+    const nextButton = screen.getByRole('button', { name: '次へ' })
+
+    expect(prevButton).toBeDisabled()
+    expect(nextButton).toBeDisabled()
   })
 })

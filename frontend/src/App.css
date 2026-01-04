@@ -478,6 +478,20 @@
   color: var(--ink);
 }
 
+.pagination {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pagination__status {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -515,6 +529,12 @@
 .ghost:focus-visible {
   outline: 3px solid rgba(200, 90, 54, 0.35);
   outline-offset: 3px;
+}
+
+.ghost:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
 }
 
 @media (max-width: 980px) {

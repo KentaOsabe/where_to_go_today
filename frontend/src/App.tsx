@@ -9,7 +9,7 @@ function App() {
   const navigate = useNavigate()
   const registerState = useRegisterPlace({
     onSuccess: (place) => {
-      navigate(`/places/${place.id}`)
+      navigate('/places')
     },
   })
 
