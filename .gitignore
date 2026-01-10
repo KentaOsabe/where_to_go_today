@@ -3,6 +3,7 @@
 /.env.*.local
 /.idea/
 /.vscode/
+openai_apikey
 
 # Node / Frontend
 /frontend/node_modules/
