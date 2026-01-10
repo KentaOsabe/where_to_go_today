@@ -36,7 +36,7 @@ class RecommendationService
   def matches_condition?(place_value, condition_value)
     return false if condition_value.blank? || place_value.blank?
 
-    place_value.downcase.include?(condition_value.downcase)
+    place_value.to_s.downcase.include?(condition_value.to_s.downcase)
   end
 
   def sort_key(place, score)

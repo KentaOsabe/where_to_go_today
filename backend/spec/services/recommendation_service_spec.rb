@@ -68,6 +68,20 @@ RSpec.describe RecommendationService, type: :service do
     expect(result.first(3)).to eq([not_visited_new, not_visited_old, visited_new])
   end
 
+  it "handles non-string condition values without error" do
+    # 概要: 条件値が文字列以外でもエラーにならないことを確認する
+    # 目的: 想定外の入力でも推薦処理が落ちないことを担保する
+    place = create_place(
+      name: "数値条件",
+      price_range: "3000-5000",
+      visit_status: "not_visited"
+    )
+
+    result = described_class.new(conditions: { price_range: 3000 }, scope: Place.all).primary_candidates
+
+    expect(result.first).to eq(place)
+  end
+
   it "limits primary candidates to 10" do
     # 概要: 一次候補が最大10件に制限されることを確認する
     # 目的: 要件で指定された上限を超えないことを担保する
