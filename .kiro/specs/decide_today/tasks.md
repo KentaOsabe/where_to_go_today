@@ -36,22 +36,22 @@
   - _Requirements: 5.2_
 
 - [ ] 3. フロントエンドの提案画面を実装する
-- [ ] 3.1 型定義を拡張する
+- [x] 3.1 型定義を拡張する
   - `Place` に `visit_reason` / `revisit_intent` を追加する
   - 提案用の `Recommendation` / `RecommendationConditions` 型を追加する
   - _Requirements: 7.1_
 
-- [ ] 3.2 提案APIクライアントを追加する
+- [x] 3.2 提案APIクライアントを追加する
   - `recommendPlaces(conditions)` を実装する
   - _Requirements: 2.1, 5.1_
 
-- [ ] 3.3 DecideTodayScreen を追加する
+- [x] 3.3 DecideTodayScreen を追加する
   - 条件入力フォーム（任意入力）と提案結果の同一画面構成
   - ローディング/失敗/0件/5件未満の表示
   - 再試行ボタンを配置
   - _Requirements: 2.1, 3.1, 3.2, 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 3.4 画面導線を追加する
+- [x] 3.4 画面導線を追加する
   - `/decide` ルートを追加する
   - PlacesListScreen に「今日どこ行く？」導線を追加する
   - _Requirements: 2.1_

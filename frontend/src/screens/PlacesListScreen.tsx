@@ -134,9 +134,14 @@ export const PlacesListScreen = () => {
             <h2>登録済みのお店</h2>
             <p>候補を確認して今日の行き先を決めましょう。</p>
           </div>
-          <Link className="ghost" to="/register">
-            お店を登録する
-          </Link>
+          <div className="result-actions">
+            <Link className="ghost" to="/decide">
+              今日どこ行く？
+            </Link>
+            <Link className="ghost" to="/register">
+              お店を登録する
+            </Link>
+          </div>
         </div>
         {isLoading && (
           <p className="result-loading">一覧を読み込み中です。</p>

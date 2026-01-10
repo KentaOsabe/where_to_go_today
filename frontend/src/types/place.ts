@@ -1,4 +1,5 @@
 export type VisitStatus = 'not_visited' | 'visited'
+export type RevisitIntent = 'yes' | 'no' | 'unknown'
 
 export type FormState = {
   name: string
@@ -21,6 +22,8 @@ export type Place = {
   area: string | null
   price_range: string | null
   note: string | null
+  visit_reason: string | null
+  revisit_intent: RevisitIntent | null
   created_at: string
   updated_at: string
 }
@@ -40,6 +43,17 @@ export type PlacesResponse = {
 export type ApiErrorResponse = {
   errors?: Partial<Record<keyof FormState, string[]>>
   existing_place_id?: number
+}
+
+export type RecommendationConditions = {
+  genre: string | null
+  area: string | null
+  price_range: string | null
+}
+
+export type Recommendation = {
+  place: Place
+  reason: string
 }
 
 export const initialFormState: FormState = {

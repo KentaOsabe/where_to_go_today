@@ -14,6 +14,8 @@ const mockPlace: Place = {
   area: '渋谷',
   price_range: '3000-5000',
   note: 'メモ内容',
+  visit_reason: null,
+  revisit_intent: null,
   created_at: '2026-01-03T00:00:00Z',
   updated_at: '2026-01-03T00:00:00Z',
 }
@@ -145,5 +147,22 @@ describe('PlacesListScreen', () => {
     registerLinks.forEach((link) => {
       expect(link).toHaveAttribute('href', '/register')
     })
+  })
+
+  it('提案画面への導線が/decideで表示される', async () => {
+    // 概要: 一覧画面から提案画面へ遷移できる導線があることを確認する
+    // 目的: 今日どこ行く？の入口を提供できるようにする
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(buildPlacesResponse([])),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderScreen()
+
+    const decideLink = await screen.findByRole('link', {
+      name: '今日どこ行く？',
+    })
+    expect(decideLink).toHaveAttribute('href', '/decide')
   })
 })
