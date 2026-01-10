@@ -1,12 +1,12 @@
 # タスク
 
 - [ ] 1. データモデルと入力項目を拡張する
-- [ ] 1.1 places に評価項目を追加する
+- [x] 1.1 places に評価項目を追加する
   - `visit_reason`（text）と `revisit_intent`（string）を追加する
   - `revisit_intent` は `yes` / `no` / `unknown` のいずれかを許容する
   - _Requirements: 4.3, 7.1_
 
-- [ ] 1.2 API の許可パラメータを拡張する
+- [x] 1.2 API の許可パラメータを拡張する
   - `place_params` に `visit_reason` / `revisit_intent` を追加する
   - _Requirements: 7.1_
 

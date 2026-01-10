@@ -25,6 +25,25 @@ RSpec.describe "Api::Places", type: :request do
       expect(body["id"]).to be_present
     end
 
+    it "creates a place with evaluation fields" do
+      # 概要: 評価項目を含めて登録できることを確認する
+      # 目的: APIが評価項目を受け付け保存できることを担保する
+      params = {
+        name: "評価付き店舗",
+        tabelog_url: "https://tabelog.com/tokyo/A0000009/",
+        visit_status: "visited",
+        visit_reason: "近くて入りやすかった",
+        revisit_intent: "yes"
+      }
+
+      post "/api/places", params: params, as: :json
+
+      expect(response).to have_http_status(:created)
+      body = JSON.parse(response.body)
+      expect(body["visit_reason"]).to eq("近くて入りやすかった")
+      expect(body["revisit_intent"]).to eq("yes")
+    end
+
     it "returns validation errors" do
       # 概要: 必須項目不足で422が返ることを確認する
       # 目的: バリデーション失敗時に理由が返ることを担保する
@@ -129,6 +148,28 @@ RSpec.describe "Api::Places", type: :request do
       expect(body["area"]).to eq("渋谷")
       expect(body["price_range"]).to eq("¥¥")
       expect(body["note"]).to eq("メモ")
+    end
+
+    it "updates evaluation fields" do
+      # 概要: 評価項目が更新できることを確認する
+      # 目的: APIが評価項目の更新を許可することを担保する
+      place = Place.create!(
+        name: "評価更新前",
+        tabelog_url: "https://tabelog.com/tokyo/A0004010",
+        visit_status: "visited"
+      )
+
+      params = {
+        visit_reason: "雰囲気が良かった",
+        revisit_intent: "no"
+      }
+
+      patch "/api/places/#{place.id}", params: params, as: :json
+
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      expect(body["visit_reason"]).to eq("雰囲気が良かった")
+      expect(body["revisit_intent"]).to eq("no")
     end
 
     it "returns validation errors" do

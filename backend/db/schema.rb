@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_03_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_10_090000) do
   create_table "places", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "area"
     t.datetime "created_at", null: false
@@ -18,10 +18,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_03_090000) do
     t.string "name", null: false
     t.text "note"
     t.string "price_range"
+    t.string "revisit_intent"
     t.string "tabelog_url", null: false
     t.datetime "updated_at", null: false
+    t.text "visit_reason"
     t.string "visit_status", null: false
     t.index ["tabelog_url"], name: "index_places_on_tabelog_url", unique: true
+    t.check_constraint "(`revisit_intent` in (_utf8mb4'yes',_utf8mb4'no',_utf8mb4'unknown')) or (`revisit_intent` is null)", name: "revisit_intent_allowed_values"
     t.check_constraint "`visit_status` in (_utf8mb4'visited',_utf8mb4'not_visited')", name: "visit_status_allowed_values"
   end
 end

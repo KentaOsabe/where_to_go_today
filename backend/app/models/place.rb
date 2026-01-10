@@ -4,12 +4,15 @@ require "uri"
 
 class Place < ApplicationRecord
   VISIT_STATUSES = %w[visited not_visited].freeze
+  REVISIT_INTENTS = %w[yes no unknown].freeze
 
   before_validation :normalize_tabelog_url
+  before_validation :normalize_revisit_intent
 
   validates :name, presence: true
   validates :tabelog_url, presence: true, uniqueness: { case_sensitive: false }
   validates :visit_status, presence: true, inclusion: { in: VISIT_STATUSES }
+  validates :revisit_intent, inclusion: { in: REVISIT_INTENTS }, allow_nil: true
   validate :tabelog_url_domain
 
   private
@@ -55,5 +58,12 @@ class Place < ApplicationRecord
     errors.add(:tabelog_url, "はtabelog.com ドメインのURLを入力してください")
   rescue URI::InvalidURIError
     errors.add(:tabelog_url, "はhttps://tabelog.com のURLを入力してください")
+  end
+
+  def normalize_revisit_intent
+    return if revisit_intent.nil?
+
+    normalized = revisit_intent.strip
+    self.revisit_intent = normalized.presence
   end
 end
