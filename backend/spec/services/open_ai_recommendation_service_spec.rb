@@ -66,6 +66,35 @@ RSpec.describe OpenAiRecommendationService, type: :service do
     end
   end
 
+  it "limits recommendations to 5 even if OpenAI returns more" do
+    # 概要: OpenAIが上限を超える提案を返しても5件以内に制限されることを確認する
+    # 目的: 最終結果の上限がAPI要件に合致することを担保する
+    places = 6.times.map { |index| create_place(name: "候補#{index + 1}") }
+
+    response_body = build_response_body(
+      {
+        recommendations: places.map { |place| { id: place.id, reason: "理由#{place.id}" } }
+      }.to_json
+    )
+
+    http = instance_double(Net::HTTP)
+    response = instance_double(Net::HTTPResponse, code: "200", body: response_body)
+    http_client = class_double(Net::HTTP)
+    allow(http_client).to receive(:start).and_yield(http)
+    allow(http).to receive(:request).and_return(response)
+
+    Tempfile.create("openai_apikey") do |file|
+      file.write("test-key")
+      file.flush
+
+      service = described_class.new(api_key_path: file.path, http_client: http_client)
+      result = service.refine(primary_candidates: places, conditions: {})
+
+      expect(result.size).to eq(5)
+      expect(result.map { |item| item[:place] }).to eq(places.first(5))
+    end
+  end
+
   it "falls back to primary candidates when OpenAI request fails" do
     # 概要: OpenAIリクエストが失敗した場合にフォールバックすることを確認する
     # 目的: OpenAI利用不可時でも提案が返ることを担保する
