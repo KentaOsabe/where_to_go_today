@@ -75,6 +75,8 @@ describe('useRegisterPlace', () => {
       area: null,
       price_range: null,
       note: null,
+      visit_reason: null,
+      revisit_intent: null,
       created_at: '2026-01-03T00:00:00Z',
       updated_at: '2026-01-03T00:00:00Z',
     }

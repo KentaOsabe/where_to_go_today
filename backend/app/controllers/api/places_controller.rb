@@ -67,7 +67,9 @@ module Api
         :genre,
         :area,
         :price_range,
-        :note
+        :note,
+        :visit_reason,
+        :revisit_intent
       )
     end
 

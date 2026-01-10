@@ -14,6 +14,8 @@ const basePlace: Place = {
   area: '渋谷',
   price_range: '3000-5000',
   note: 'メモ',
+  visit_reason: null,
+  revisit_intent: null,
   created_at: '2026-01-03T00:00:00Z',
   updated_at: '2026-01-03T00:00:00Z',
 }

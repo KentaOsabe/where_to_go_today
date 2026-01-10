@@ -3,6 +3,7 @@ import './App.css'
 import { EditPlaceScreen } from './screens/EditPlaceScreen'
 import { PlaceDetailScreen } from './screens/PlaceDetailScreen'
 import { PlacesListScreen } from './screens/PlacesListScreen'
+import { DecideTodayScreen } from './screens/DecideTodayScreen'
 import { RegisterPlaceScreen } from './screens/RegisterPlaceScreen'
 import { useRegisterPlace } from './hooks/useRegisterPlace'
 
@@ -23,6 +24,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/places" replace />} />
         <Route path="/places" element={<PlacesListScreen />} />
+        <Route path="/decide" element={<DecideTodayScreen />} />
         <Route path="/places/:id/edit" element={<EditPlaceScreen />} />
         <Route path="/places/:id" element={<PlaceDetailScreen />} />
         <Route

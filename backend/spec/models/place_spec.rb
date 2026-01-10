@@ -81,4 +81,30 @@ RSpec.describe Place, type: :model do
     expect(duplicate).not_to be_valid
     expect(duplicate.errors[:tabelog_url]).to include("has already been taken")
   end
+
+  it "accepts allowed revisit_intent values" do
+    # 概要: 再訪意向の許容値が有効になることを確認する
+    # 目的: 許容値以外を弾くための前提を担保する
+    %w[yes no unknown].each do |value|
+      place = build_place(revisit_intent: value)
+      expect(place).to be_valid, "expected #{value} to be valid"
+    end
+  end
+
+  it "rejects invalid revisit_intent" do
+    # 概要: 再訪意向の許容値以外が無効になることを確認する
+    # 目的: 不正な値の登録を防止する
+    place = build_place(revisit_intent: "maybe")
+    expect(place).not_to be_valid
+    expect(place.errors[:revisit_intent]).to include("is not included in the list")
+  end
+
+  it "normalizes blank revisit_intent to nil" do
+    # 概要: 空の再訪意向がnilに正規化されることを確認する
+    # 目的: 空文字による不正な保存を防ぐ
+    place = build_place(revisit_intent: " ")
+    place.valid?
+    expect(place.revisit_intent).to be_nil
+    expect(place).to be_valid
+  end
 end

@@ -14,5 +14,6 @@ Rails.application.routes.draw do
 
   namespace :api do
     resources :places, only: %i[index create show update destroy]
+    resources :recommendations, only: %i[create]
   end
 end
