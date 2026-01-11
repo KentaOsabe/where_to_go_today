@@ -164,9 +164,14 @@ export const DecideTodayScreen = () => {
               </p>
               <p className="action-sub">Enter で提案を実行できます。</p>
             </div>
-            <button className="primary" type="submit" disabled={isLoading}>
-              提案する
-            </button>
+            <div className="result-actions">
+              <Link className="ghost" to="/places">
+                店舗一覧へ
+              </Link>
+              <button className="primary" type="submit" disabled={isLoading}>
+                提案する
+              </button>
+            </div>
           </div>
         </form>
       </section>

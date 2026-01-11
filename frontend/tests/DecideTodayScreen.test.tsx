@@ -43,6 +43,15 @@ describe('DecideTodayScreen', () => {
     condition_text: 'ジャンル: 和食 / エリア: 渋谷 / 予算帯: 3000-5000',
   }
 
+  it('店舗一覧への導線を表示する', () => {
+    // 概要: 条件入力画面に店舗一覧へのリンクが表示されることを確認する
+    // 目的: 条件入力画面から一覧へ戻れるようにする
+    renderScreen()
+
+    const listLink = screen.getByRole('link', { name: '店舗一覧へ' })
+    expect(listLink).toHaveAttribute('href', '/places')
+  })
+
   it('条件入力後に提案結果と理由を表示する', async () => {
     // 概要: 条件入力後に提案結果が表示されることを確認する
     // 目的: 提案結果と理由を画面で確認できるようにする
