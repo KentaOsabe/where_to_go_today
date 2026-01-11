@@ -24,42 +24,85 @@ class OpenAiRecommendationService
     return [] if candidates.empty?
 
     api_key = read_api_key
-    raise RecommendationError, "missing_api_key" if api_key.blank?
+    if api_key.blank?
+      log_error("missing_api_key", conditions: conditions, limit: limit)
+      raise RecommendationError, "missing_api_key"
+    end
 
-    response = request_openai(api_key, candidates, conditions, limit)
+    response = request_openai(api_key, candidates, conditions, limit, include_temperature: true)
+    if response.code.to_i == 400 && temperature_unsupported?(response.body)
+      log_error(
+        "unsupported_temperature",
+        conditions: conditions,
+        limit: limit,
+        response_body: response.body.to_s.slice(0, 500)
+      )
+      response = request_openai(api_key, candidates, conditions, limit, include_temperature: false)
+    end
     unless response.respond_to?(:code) && response.respond_to?(:body)
+      log_error("invalid_response_object", conditions: conditions, limit: limit)
       raise RecommendationError, "invalid_response"
     end
-    raise RecommendationError, "request_failed" unless response.code.to_i == 200
+    unless response.code.to_i == 200
+      log_error(
+        "request_failed",
+        conditions: conditions,
+        limit: limit,
+        response_code: response.code.to_i,
+        response_body: response.body.to_s.slice(0, 500)
+      )
+      raise RecommendationError, "request_failed"
+    end
 
     recommendations = parse_recommendations(response.body, candidates, limit)
-    raise RecommendationError, "invalid_output" if recommendations.empty?
+    if recommendations.empty?
+      log_error(
+        "invalid_output",
+        conditions: conditions,
+        limit: limit,
+        response_body: response.body.to_s.slice(0, 500)
+      )
+      raise RecommendationError, "invalid_output"
+    end
 
     recommendations
-  rescue RecommendationError
+  rescue RecommendationError => e
+    log_error(
+      "recommendation_error",
+      conditions: conditions,
+      limit: limit,
+      error_class: e.class.name,
+      error_message: e.message
+    )
     raise
-  rescue StandardError
+  rescue StandardError => e
+    log_error(
+      "unexpected_error",
+      conditions: conditions,
+      limit: limit,
+      error_class: e.class.name,
+      error_message: e.message
+    )
     raise RecommendationError, "request_failed"
   end
 
   private
 
-  def request_openai(api_key, candidates, conditions, limit)
+  def request_openai(api_key, candidates, conditions, limit, include_temperature: true)
     uri = URI(API_URL)
     request = Net::HTTP::Post.new(uri)
     request["Authorization"] = "Bearer #{api_key}"
     request["Content-Type"] = "application/json"
-    request.body = build_payload(candidates, conditions, limit).to_json
+    request.body = build_payload(candidates, conditions, limit, include_temperature: include_temperature).to_json
 
     @http_client.start(uri.host, uri.port, use_ssl: true) do |http|
       http.request(request)
     end
   end
 
-  def build_payload(candidates, conditions, limit)
-    {
+  def build_payload(candidates, conditions, limit, include_temperature: true)
+    payload = {
       model: @model,
-      temperature: @temperature,
       input: [
         {
           role: "system",
@@ -98,6 +141,8 @@ class OpenAiRecommendationService
         }
       }
     }
+    payload[:temperature] = @temperature if include_temperature && !@temperature.nil?
+    payload
   end
 
   def build_prompt(candidates, conditions, limit)
@@ -195,6 +240,29 @@ class OpenAiRecommendationService
     text = if conditions.respond_to?(:[]) then conditions[:condition_text] else nil end
     value = text.to_s.strip
     value.present? ? value : "条件なし"
+  end
+
+  def temperature_unsupported?(body)
+    payload = JSON.parse(body)
+    error = payload["error"]
+    return false unless error.is_a?(Hash)
+
+    param = error["param"].to_s
+    message = error["message"].to_s
+    param == "temperature" || message.include?("temperature")
+  rescue JSON::ParserError
+    body.to_s.include?("temperature")
+  end
+
+  def log_error(reason, payload = {})
+    return unless defined?(Rails) && Rails.respond_to?(:logger)
+
+    Rails.logger.error(
+      {
+        message: "open_ai_recommendation_failed",
+        reason: reason
+      }.merge(payload).to_json
+    )
   end
 
   def read_api_key

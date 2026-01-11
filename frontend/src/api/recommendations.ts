@@ -29,14 +29,19 @@ export const recommendPlaces = async (
   })
 
   const data = await parseJson<{
-    conditions: RecommendationConditions
+    condition_text: string
     recommendations: Recommendation[]
   }>(response)
 
-  if (response.ok && data && Array.isArray(data.recommendations)) {
+  if (
+    response.ok &&
+    data &&
+    Array.isArray(data.recommendations) &&
+    typeof data.condition_text === 'string'
+  ) {
     return {
       type: 'success',
-      conditions: data.conditions,
+      conditions: { condition_text: data.condition_text },
       recommendations: data.recommendations,
     }
   }

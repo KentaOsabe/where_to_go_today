@@ -5,15 +5,11 @@ import { recommendPlaces } from '../api/recommendations'
 import type { Place, Recommendation, RecommendationConditions } from '../types/place'
 
 type ConditionFormState = {
-  genre: string
-  area: string
-  price_range: string
+  condition_text: string
 }
 
 const initialFormState: ConditionFormState = {
-  genre: '',
-  area: '',
-  price_range: '',
+  condition_text: '',
 }
 
 const formatVisitStatus = (value: Place['visit_status']) =>
@@ -39,17 +35,8 @@ const buildOptionalInfo = (place: Place) => {
   )
 }
 
-const normalizeCondition = (value: string): string | null => {
-  const trimmed = value.trim()
-  return trimmed.length > 0 ? trimmed : null
-}
-
-const buildConditions = (
-  formState: ConditionFormState
-): RecommendationConditions => ({
-  genre: normalizeCondition(formState.genre),
-  area: normalizeCondition(formState.area),
-  price_range: normalizeCondition(formState.price_range),
+const buildConditions = (conditionText: string): RecommendationConditions => ({
+  condition_text: conditionText,
 })
 
 export const DecideTodayScreen = () => {
@@ -57,9 +44,12 @@ export const DecideTodayScreen = () => {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
   const [hasResult, setHasResult] = useState(false)
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = event.target
     if (!(name in formState)) {
       return
@@ -68,16 +58,19 @@ export const DecideTodayScreen = () => {
       ...prev,
       [name]: value,
     }))
+    if (validationError && value.trim().length > 0) {
+      setValidationError(null)
+    }
   }
 
-  const runRecommendation = async () => {
+  const runRecommendation = async (conditionText: string) => {
     setIsLoading(true)
     setLoadError(null)
     setHasResult(false)
     setRecommendations([])
 
     try {
-      const result = await recommendPlaces(buildConditions(formState))
+      const result = await recommendPlaces(buildConditions(conditionText))
       if (result.type === 'success') {
         setRecommendations(result.recommendations)
         setHasResult(true)
@@ -96,14 +89,30 @@ export const DecideTodayScreen = () => {
     if (isLoading) {
       return
     }
-    runRecommendation()
+    const trimmedCondition = formState.condition_text.trim()
+    if (trimmedCondition.length === 0) {
+      setValidationError('条件を入力してください。')
+      return
+    }
+    setValidationError(null)
+    setFormState((prev) => ({
+      ...prev,
+      condition_text: trimmedCondition,
+    }))
+    runRecommendation(trimmedCondition)
   }
 
   const handleRetry = () => {
     if (isLoading) {
       return
     }
-    runRecommendation()
+    const trimmedCondition = formState.condition_text.trim()
+    if (trimmedCondition.length === 0) {
+      setValidationError('条件を入力してください。')
+      return
+    }
+    setValidationError(null)
+    runRecommendation(trimmedCondition)
   }
 
   const showEmptyState = hasResult && recommendations.length === 0
@@ -123,48 +132,36 @@ export const DecideTodayScreen = () => {
             <div className="section-header">
               <div>
                 <h2>今日の条件</h2>
-                <p>入力は任意です。空のままでも提案できます。</p>
+                <p>入力は必須です。今日の条件を自由記述で入力してください。</p>
               </div>
-              <span className="section-badge">任意</span>
+              <span className="section-badge">必須</span>
             </div>
 
-            <div className="field-grid">
-              <label className="field">
-                <span>ジャンル</span>
-                <input
-                  name="genre"
-                  type="text"
-                  placeholder="例: 和食、カフェ"
-                  value={formState.genre}
-                  onChange={handleChange}
-                />
-              </label>
-              <label className="field">
-                <span>エリア</span>
-                <input
-                  name="area"
-                  type="text"
-                  placeholder="例: 渋谷、三軒茶屋"
-                  value={formState.area}
-                  onChange={handleChange}
-                />
-              </label>
-              <label className="field">
-                <span>予算帯</span>
-                <input
-                  name="price_range"
-                  type="text"
-                  placeholder="例: 3000-5000"
-                  value={formState.price_range}
-                  onChange={handleChange}
-                />
-              </label>
-            </div>
+            <label
+              className={`field${validationError ? ' field--error' : ''}`}
+            >
+              <span>条件</span>
+              <textarea
+                name="condition_text"
+                placeholder="例: 今日は軽めで、駅近。静かな雰囲気。"
+                value={formState.condition_text}
+                onChange={handleChange}
+                rows={4}
+              />
+            </label>
+
+            {validationError && (
+              <p className="field-error" role="alert">
+                {validationError}
+              </p>
+            )}
           </div>
 
           <div className="actions">
             <div>
-              <p className="action-hint">条件は提案の優先度付けに使われます。</p>
+              <p className="action-hint">
+                条件は必須です。具体的に書くほど提案しやすくなります。
+              </p>
               <p className="action-sub">Enter で提案を実行できます。</p>
             </div>
             <button className="primary" type="submit" disabled={isLoading}>
@@ -202,7 +199,7 @@ export const DecideTodayScreen = () => {
         {showEmptyState && (
           <div className="form-alert form-alert--warning">
             <p>条件を変えて試してください。</p>
-            <p>入力なしでも提案できます。</p>
+            <p>条件を具体的にすると提案しやすくなります。</p>
           </div>
         )}
 

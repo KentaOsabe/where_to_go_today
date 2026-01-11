@@ -135,7 +135,7 @@ export const PlaceForm = ({
             <input
               name="area"
               type="text"
-              placeholder="例: 渋谷、三軒茶屋"
+              placeholder="例: 新潟、長岡"
               value={formState.area}
               onChange={onChange}
             />

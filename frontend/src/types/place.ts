@@ -46,9 +46,7 @@ export type ApiErrorResponse = {
 }
 
 export type RecommendationConditions = {
-  genre: string | null
-  area: string | null
-  price_range: string | null
+  condition_text: string
 }
 
 export type Recommendation = {

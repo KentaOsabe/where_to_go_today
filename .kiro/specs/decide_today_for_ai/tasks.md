@@ -23,20 +23,20 @@
   - _Requirements: 2.5, 5.1_
 
 - [ ] 2. フロントエンドの提案画面を改修する
-- [ ] 2.1 型定義を更新する
+- [x] 2.1 型定義を更新する
   - `RecommendationConditions` を `condition_text` のみに変更する
   - _Requirements: 2.2, 3.1_
 
-- [ ] 2.2 提案APIクライアントを更新する
+- [x] 2.2 提案APIクライアントを更新する
   - `recommendPlaces({ condition_text })` で送信する
   - _Requirements: 2.5_
 
-- [ ] 2.3 DecideTodayScreen を自由記述入力に変更する
+- [x] 2.3 DecideTodayScreen を自由記述入力に変更する
   - textarea に変更し、未入力時は送信不可 + エラー表示
   - 入力内容は失敗時も保持する
   - _Requirements: 2.1, 3.1, 3.2, 6.1, 6.3, 8.2, 9.1_
 
-- [ ] 2.4 提案結果表示の文言を調整する
+- [x] 2.4 提案結果表示の文言を調整する
   - 条件必須の文言/ヘルプを反映する
   - _Requirements: 2.1, 6.1_
 

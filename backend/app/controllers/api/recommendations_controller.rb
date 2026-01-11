@@ -21,7 +21,16 @@ module Api
         condition_text: conditions[:condition_text],
         recommendations: recommendations.map { |item| format_recommendation(item) }
       }
-    rescue StandardError
+    rescue StandardError => e
+      Rails.logger.error(
+        {
+          message: "recommendation_failed",
+          error_class: e.class.name,
+          error_message: e.message,
+          condition_text_present: conditions[:condition_text].present?,
+          request_id: request.request_id
+        }.to_json
+      )
       render json: { error: "recommendation_failed" }, status: :internal_server_error
     end
 
