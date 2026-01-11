@@ -64,6 +64,22 @@ describe('PlaceDetailScreen', () => {
     expect(screen.getByRole('button', { name: '削除' })).toBeInTheDocument()
   })
 
+  it('店舗一覧へのリンクを表示する', async () => {
+    // 概要: 詳細画面に店舗一覧へのリンクが表示されることを確認する
+    // 目的: 詳細画面から一覧へ戻れる導線を用意する
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue(basePlace),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderScreen()
+
+    const listLink = await screen.findByRole('link', { name: '店舗一覧へ' })
+    expect(listLink).toHaveAttribute('href', '/places')
+  })
+
   it('取得失敗時にエラーメッセージを表示する', async () => {
     // 概要: 詳細取得が失敗した場合にエラーメッセージが表示されることを確認する
     // 目的: 取得失敗時に再試行判断ができるようにする

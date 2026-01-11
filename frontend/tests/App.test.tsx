@@ -33,6 +33,15 @@ afterEach(() => {
 })
 
 describe('App', () => {
+  it('店舗登録画面に店舗一覧へのリンクを表示する', () => {
+    // 概要: 店舗登録画面に店舗一覧へのリンクが表示されることを確認する
+    // 目的: 登録画面から一覧へ戻れる導線を用意する
+    renderApp('/register')
+
+    const listLink = screen.getByRole('link', { name: '店舗一覧へ' })
+    expect(listLink).toHaveAttribute('href', '/places')
+  })
+
   it('必須項目の未入力を検知してエラーを表示する', async () => {
     // 概要: 必須項目が空のまま送信した場合にエラーを表示する
     // 目的: 未入力のまま送信できないことを保証する

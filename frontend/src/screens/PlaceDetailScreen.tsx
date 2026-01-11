@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deletePlace, fetchPlace } from '../api/places'
 import { PlaceResult } from '../components/PlaceResult'
 import type { Place } from '../types/place'
@@ -149,26 +149,31 @@ export const PlaceDetailScreen = () => {
         isLoading={isLoading}
         error={loadError}
         actions={
-          placeId !== null && (
-            <>
-              <button
-                type="button"
-                className="ghost"
-                onClick={handleEdit}
-                disabled={!activePlace || isLoading || isDeleting}
-              >
-                編集
-              </button>
-              <button
-                type="button"
-                className="ghost"
-                onClick={handleDelete}
-                disabled={!activePlace || isLoading || isDeleting}
-              >
-                削除
-              </button>
-            </>
-          )
+          <>
+            <Link className="ghost" to="/places">
+              店舗一覧へ
+            </Link>
+            {placeId !== null && (
+              <>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={handleEdit}
+                  disabled={!activePlace || isLoading || isDeleting}
+                >
+                  編集
+                </button>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={handleDelete}
+                  disabled={!activePlace || isLoading || isDeleting}
+                >
+                  削除
+                </button>
+              </>
+            )}
+          </>
         }
       />
     </main>

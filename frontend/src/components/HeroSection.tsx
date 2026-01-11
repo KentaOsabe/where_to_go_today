@@ -1,6 +1,13 @@
+import { Link } from 'react-router-dom'
+
 export const HeroSection = () => (
   <section className="hero">
-    <div className="hero-tag">Register Place</div>
+    <div className="hero-actions">
+      <div className="hero-tag">Register Place</div>
+      <Link className="ghost" to="/places">
+        店舗一覧へ
+      </Link>
+    </div>
     <h1>今日の候補を、最小入力で。</h1>
     <p>店名・食べログURL・来店ステータスだけで登録できます。追加情報は後回しでOK。</p>
     <div className="hero-panel">
