@@ -1,24 +1,24 @@
 # タスク
 
 - [ ] 1. 提案APIを自由記述入力に対応させる
-- [ ] 1.1 リクエストI/Fを `condition_text` に変更し、未入力時はエラーを返す
+- [x] 1.1 リクエストI/Fを `condition_text` に変更し、未入力時はエラーを返す
   - `POST /api/recommendations` で `condition_text` を必須とする
   - 空文字の場合は 422 でエラーを返す
   - _Requirements: 2.2, 2.3, 3.2, 6.3, 9.1_
 
-- [ ] 1.2 ルールベースの一次候補選定を廃止する
+- [x] 1.2 ルールベースの一次候補選定を廃止する
   - `RecommendationService` を使用しない設計に変更する
   - 候補は `Place` 全件を OpenAI に渡す
   - _Requirements: 2.5, 2.6, 4.1, 4.2_
 
-- [ ] 1.3 OpenAI 提案生成ロジックを改修する
+- [x] 1.3 OpenAI 提案生成ロジックを改修する
   - 入力: `condition_text` + 候補一覧
   - 出力: 最大5件（id, reason）のみ
   - 理由文に `condition_text` を反映する指示を追加する
   - 不正/空の出力はエラー扱いにし、フォールバックは廃止する
   - _Requirements: 2.5, 4.3, 4.4, 5.1, 5.2, 6.3_
 
-- [ ] 1.4 提案APIレスポンスを整備する
+- [x] 1.4 提案APIレスポンスを整備する
   - `condition_text` と `recommendations`（place + reason）を返す
   - _Requirements: 2.5, 5.1_
 

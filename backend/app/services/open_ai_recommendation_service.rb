@@ -5,6 +5,8 @@ require "net/http"
 require "set"
 
 class OpenAiRecommendationService
+  class RecommendationError < StandardError; end
+
   API_URL = "https://api.openai.com/v1/responses"
   DEFAULT_MODEL = "gpt-5-nano"
   DEFAULT_TEMPERATURE = 0.7
@@ -19,21 +21,25 @@ class OpenAiRecommendationService
 
   def refine(primary_candidates:, conditions:, limit: 5)
     candidates = Array(primary_candidates)
-    return fallback(candidates, conditions, limit: limit) if candidates.empty?
+    return [] if candidates.empty?
 
     api_key = read_api_key
-    return fallback(candidates, conditions, limit: limit) if api_key.blank?
+    raise RecommendationError, "missing_api_key" if api_key.blank?
 
     response = request_openai(api_key, candidates, conditions, limit)
-    return fallback(candidates, conditions, limit: limit) unless response.respond_to?(:code) && response.respond_to?(:body)
-    return fallback(candidates, conditions, limit: limit) unless response.code.to_i == 200
+    unless response.respond_to?(:code) && response.respond_to?(:body)
+      raise RecommendationError, "invalid_response"
+    end
+    raise RecommendationError, "request_failed" unless response.code.to_i == 200
 
-    recommendations = parse_recommendations(response.body, candidates, conditions, limit)
-    return fallback(candidates, conditions, limit: limit) if recommendations.empty?
+    recommendations = parse_recommendations(response.body, candidates, limit)
+    raise RecommendationError, "invalid_output" if recommendations.empty?
 
     recommendations
+  rescue RecommendationError
+    raise
   rescue StandardError
-    fallback(candidates, conditions, limit: limit)
+    raise RecommendationError, "request_failed"
   end
 
   private
@@ -61,7 +67,7 @@ class OpenAiRecommendationService
         },
         {
           role: "user",
-          content: build_prompt(candidates, normalize_conditions(conditions), limit)
+          content: build_prompt(candidates, conditions, limit)
         }
       ],
       text: {
@@ -95,18 +101,23 @@ class OpenAiRecommendationService
   end
 
   def build_prompt(candidates, conditions, limit)
+    condition_text = extract_condition_text(conditions)
     lines = []
-    lines << "条件:"
-    lines << "ジャンル: #{display_value(conditions[:genre])}"
-    lines << "エリア: #{display_value(conditions[:area])}"
-    lines << "予算帯: #{display_value(conditions[:price_range])}"
+    lines << "あなたは「今日どこ行く？」を一緒に考えるアシスタントです。"
     lines << ""
-    lines << "候補一覧:"
+    lines << "【今日の条件】"
+    lines << condition_text
+    lines << ""
+    lines << "【候補となるお店一覧】"
     candidates.each do |place|
       lines << format_candidate(place)
     end
     lines << ""
-    lines << "上記から最大#{limit}件を選び、理由を短く書いてください。"
+    lines << "制約:"
+    lines << "- 最大#{limit}件まで選んでください"
+    lines << "- 条件に完全一致する必要はありません"
+    lines << "- 行ったことのない店を1〜2件含めてください"
+    lines << "- 明らかに条件と外れる店は除外してください"
     lines.join("\n")
   end
 
@@ -118,12 +129,12 @@ class OpenAiRecommendationService
       "area: #{display_value(place.area)}",
       "price_range: #{display_value(place.price_range)}",
       "visit_status: #{display_value(place.visit_status)}",
-      "revisit_intent: #{display_value(place.revisit_intent)}",
-      "visit_reason: #{display_value(place.visit_reason)}"
+      "visit_reason: #{display_value(place.visit_reason)}",
+      "note: #{display_value(place.note)}"
     ].join(", ")
   end
 
-  def parse_recommendations(body, candidates, conditions, limit)
+  def parse_recommendations(body, candidates, limit)
     payload = JSON.parse(body)
     output_text = extract_output_text(payload)
     return [] if output_text.blank?
@@ -146,7 +157,7 @@ class OpenAiRecommendationService
 
       reason = item["reason"] || item[:reason]
       reason = reason.to_s.strip
-      reason = template_reason(place, conditions) if reason.blank?
+      next if reason.blank?
 
       results << { place: place, reason: reason }
       seen << place.id
@@ -176,38 +187,14 @@ class OpenAiRecommendationService
     texts.join
   end
 
-  def fallback(candidates, conditions, limit:)
-    normalized_conditions = normalize_conditions(conditions)
-    candidates.first(limit).map do |place|
-      { place: place, reason: template_reason(place, normalized_conditions) }
-    end
-  end
-
-  def template_reason(place, conditions)
-    matches = []
-    matches << "ジャンル: #{place.genre}" if matches_condition?(place.genre, conditions[:genre])
-    matches << "エリア: #{place.area}" if matches_condition?(place.area, conditions[:area])
-    matches << "予算帯: #{place.price_range}" if matches_condition?(place.price_range, conditions[:price_range])
-
-    return "登録済みの候補から選びました。" if matches.empty?
-
-    "条件に近い: #{matches.join(' / ')}"
-  end
-
-  def matches_condition?(place_value, condition_value)
-    return false if condition_value.blank? || place_value.blank?
-
-    place_value.to_s.downcase.include?(condition_value.to_s.downcase)
-  end
-
-  def normalize_conditions(conditions)
-    (conditions || {}).to_h.transform_keys { |key| key.to_s.to_sym }.transform_values do |value|
-      value.is_a?(String) ? value.strip.presence : value
-    end
-  end
-
   def display_value(value)
     value.present? ? value.to_s : "未設定"
+  end
+
+  def extract_condition_text(conditions)
+    text = if conditions.respond_to?(:[]) then conditions[:condition_text] else nil end
+    value = text.to_s.strip
+    value.present? ? value : "条件なし"
   end
 
   def read_api_key
