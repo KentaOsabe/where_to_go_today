@@ -91,6 +91,12 @@ const EditSubmitHarness = ({
         <option value="not_visited">行っていない</option>
         <option value="visited">行った</option>
       </select>
+      <input
+        name="visit_reason"
+        aria-label="行った理由"
+        value={formState.visit_reason}
+        onChange={handleChange}
+      />
       <button type="submit">送信</button>
     </form>
   )
@@ -155,5 +161,34 @@ describe('useEditPlace', () => {
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalledWith(updatedPlace)
     })
+  })
+
+  it('更新ペイロードに行った理由を含める', async () => {
+    // 概要: 更新リクエストに行った理由が含まれることを確認する
+    // 目的: 追加情報がAPIに送信されることを保証する
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: vi.fn().mockResolvedValue(basePlace),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: vi.fn().mockResolvedValue(basePlace),
+      } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const user = userEvent.setup()
+    render(<EditSubmitHarness placeId={basePlace.id} onSuccess={vi.fn()} />)
+
+    await screen.findByLabelText('店名')
+    await user.type(screen.getByLabelText('行った理由'), '再訪したい理由')
+    await user.click(screen.getByRole('button', { name: '送信' }))
+
+    const [, options] = fetchMock.mock.calls[1]
+    const body = JSON.parse((options as RequestInit).body as string)
+    expect(body.visit_reason).toBe('再訪したい理由')
   })
 })

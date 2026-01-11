@@ -30,6 +30,7 @@ services:
       TZ: Asia/Tokyo
     volumes:
       - ./backend:/rails
+      - ./openai_apikey:/openai_apikey:ro
     working_dir: /rails
     ports:
       - "30000:3000"

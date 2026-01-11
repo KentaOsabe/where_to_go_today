@@ -25,9 +25,7 @@ afterEach(() => {
 
 describe('api/recommendations', () => {
   const conditions: RecommendationConditions = {
-    genre: '和食',
-    area: '渋谷',
-    price_range: '3000-5000',
+    condition_text: 'ジャンル: 和食 / エリア: 渋谷 / 予算帯: 3000-5000',
   }
 
   it('成功時に条件と提案一覧を返す', async () => {
@@ -53,7 +51,7 @@ describe('api/recommendations', () => {
       },
     ]
     const fetchMock = mockFetch(
-      { conditions, recommendations },
+      { condition_text: conditions.condition_text, recommendations },
       { ok: true, status: 200 }
     )
 

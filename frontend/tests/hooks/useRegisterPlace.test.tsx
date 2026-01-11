@@ -14,6 +14,7 @@ const mockFetch = (
     json: vi.fn().mockResolvedValue(payload),
   } as unknown as Response)
   vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
 }
 
 const RegisterHarness = ({ onSuccess }: { onSuccess: (place: Place) => void }) => {
@@ -49,6 +50,12 @@ const RegisterHarness = ({ onSuccess }: { onSuccess: (place: Place) => void }) =
         <option value="not_visited">行っていない</option>
         <option value="visited">行った</option>
       </select>
+      <input
+        name="visit_reason"
+        aria-label="行った理由"
+        value={formState.visit_reason}
+        onChange={handleChange}
+      />
       <button type="submit">送信</button>
       <div data-testid="name-error">{errors.name ?? ''}</div>
       <div data-testid="submit-error">{submitError ?? ''}</div>
@@ -95,6 +102,42 @@ describe('useRegisterPlace', () => {
     await user.click(screen.getByRole('button', { name: '送信' }))
 
     expect(onSuccess).toHaveBeenCalledWith(place)
+  })
+
+  it('送信ペイロードに行った理由を含める', async () => {
+    // 概要: 登録リクエストに行った理由が含まれることを確認する
+    // 目的: 追加情報がAPIに送信されることを保証する
+    const place: Place = {
+      id: 12,
+      name: 'テスト店',
+      tabelog_url: 'https://tabelog.com/tokyo/0000',
+      visit_status: 'not_visited',
+      genre: null,
+      area: null,
+      price_range: null,
+      note: null,
+      visit_reason: null,
+      revisit_intent: null,
+      created_at: '2026-01-03T00:00:00Z',
+      updated_at: '2026-01-03T00:00:00Z',
+    }
+
+    const fetchMock = mockFetch(place, { ok: true, status: 201 })
+
+    const user = userEvent.setup()
+    render(<RegisterHarness onSuccess={vi.fn()} />)
+
+    await user.type(screen.getByLabelText('店名'), 'テスト店')
+    await user.type(
+      screen.getByLabelText('食べログURL'),
+      'https://tabelog.com/tokyo/0000'
+    )
+    await user.type(screen.getByLabelText('行った理由'), '雰囲気が良さそう')
+    await user.click(screen.getByRole('button', { name: '送信' }))
+
+    const [, options] = fetchMock.mock.calls[0]
+    const body = JSON.parse((options as RequestInit).body as string)
+    expect(body.visit_reason).toBe('雰囲気が良さそう')
   })
 
   it('重複登録時にエラーメッセージと既存IDを保持する', async () => {

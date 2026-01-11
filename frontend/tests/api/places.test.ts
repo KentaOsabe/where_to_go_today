@@ -18,6 +18,7 @@ const mockFetch = (
     json: vi.fn().mockResolvedValue(payload),
   } as unknown as Response)
   vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
 }
 
 afterEach(() => {
@@ -33,6 +34,7 @@ describe('api/places', () => {
     genre: '',
     area: '',
     price_range: '',
+    visit_reason: '落ち着いて食事ができそう',
     note: '',
   }
 
@@ -62,6 +64,33 @@ describe('api/places', () => {
     if (result.type === 'success') {
       expect(result.place).toEqual(place)
     }
+  })
+
+  it('登録リクエストに行った理由を含める', async () => {
+    // 概要: 登録APIの送信ペイロードに行った理由が含まれることを確認する
+    // 目的: 追加情報がバックエンドに渡されることを保証する
+    const place: Place = {
+      id: 1,
+      name: 'テスト店',
+      tabelog_url: 'https://tabelog.com/tokyo/0000',
+      visit_status: 'not_visited',
+      genre: null,
+      area: null,
+      price_range: null,
+      note: null,
+      visit_reason: null,
+      revisit_intent: null,
+      created_at: '2026-01-03T00:00:00Z',
+      updated_at: '2026-01-03T00:00:00Z',
+    }
+
+    const fetchMock = mockFetch(place, { ok: true, status: 201 })
+
+    await createPlace(formState)
+
+    const [, options] = fetchMock.mock.calls[0]
+    const body = JSON.parse((options as RequestInit).body as string)
+    expect(body.visit_reason).toBe(formState.visit_reason)
   })
 
   it('重複登録時にduplicateとして返す', async () => {
@@ -140,6 +169,33 @@ describe('api/places', () => {
     if (result.type === 'success') {
       expect(result.place).toEqual(place)
     }
+  })
+
+  it('更新リクエストに行った理由を含める', async () => {
+    // 概要: 更新APIの送信ペイロードに行った理由が含まれることを確認する
+    // 目的: 追加情報がバックエンドに渡されることを保証する
+    const place: Place = {
+      id: 2,
+      name: '更新後の店',
+      tabelog_url: 'https://tabelog.com/tokyo/1111',
+      visit_status: 'visited',
+      genre: null,
+      area: null,
+      price_range: null,
+      note: null,
+      visit_reason: null,
+      revisit_intent: null,
+      created_at: '2026-01-03T00:00:00Z',
+      updated_at: '2026-01-04T00:00:00Z',
+    }
+
+    const fetchMock = mockFetch(place, { ok: true, status: 200 })
+
+    await updatePlace(2, formState)
+
+    const [, options] = fetchMock.mock.calls[0]
+    const body = JSON.parse((options as RequestInit).body as string)
+    expect(body.visit_reason).toBe(formState.visit_reason)
   })
 
   it('更新時の重複エラーをduplicateとして返す', async () => {

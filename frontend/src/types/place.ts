@@ -8,6 +8,7 @@ export type FormState = {
   genre: string
   area: string
   price_range: string
+  visit_reason: string
   note: string
 }
 
@@ -46,9 +47,7 @@ export type ApiErrorResponse = {
 }
 
 export type RecommendationConditions = {
-  genre: string | null
-  area: string | null
-  price_range: string | null
+  condition_text: string
 }
 
 export type Recommendation = {
@@ -63,5 +62,6 @@ export const initialFormState: FormState = {
   genre: '',
   area: '',
   price_range: '',
+  visit_reason: '',
   note: '',
 }

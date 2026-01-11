@@ -29,9 +29,9 @@ RSpec.describe OpenAiRecommendationService, type: :service do
     }.to_json
   end
 
-  it "uses OpenAI response, filters invalid ids, and fills missing reasons" do
-    # 概要: OpenAIの返却結果を検証し、不正なID除外と理由補完を行うことを確認する
-    # 目的: 提案結果の整合性と理由の欠落補正を担保する
+  it "uses OpenAI response and filters invalid ids or missing reasons" do
+    # 概要: OpenAIの返却結果を検証し、不正なIDや理由欠落の提案を除外することを確認する
+    # 目的: 提案結果の整合性を担保する
     place_a = create_place(name: "候補A", genre: "和食", area: "渋谷")
     place_b = create_place(name: "候補B", genre: "洋食", area: "新宿")
 
@@ -56,13 +56,11 @@ RSpec.describe OpenAiRecommendationService, type: :service do
       file.flush
 
       service = described_class.new(api_key_path: file.path, http_client: http_client)
-      result = service.refine(primary_candidates: [place_a, place_b], conditions: { genre: "和食" })
+      result = service.refine(primary_candidates: [place_a, place_b], conditions: { condition_text: "今日は軽めで、駅近。" })
 
-      expect(result.size).to eq(2)
+      expect(result.size).to eq(1)
       expect(result[0][:place]).to eq(place_a)
       expect(result[0][:reason]).to eq("条件に合っています")
-      expect(result[1][:place]).to eq(place_b)
-      expect(result[1][:reason]).to be_present
     end
   end
 
@@ -88,16 +86,16 @@ RSpec.describe OpenAiRecommendationService, type: :service do
       file.flush
 
       service = described_class.new(api_key_path: file.path, http_client: http_client)
-      result = service.refine(primary_candidates: places, conditions: {})
+      result = service.refine(primary_candidates: places, conditions: { condition_text: "静かな雰囲気" })
 
       expect(result.size).to eq(5)
       expect(result.map { |item| item[:place] }).to eq(places.first(5))
     end
   end
 
-  it "falls back to primary candidates when OpenAI request fails" do
-    # 概要: OpenAIリクエストが失敗した場合にフォールバックすることを確認する
-    # 目的: OpenAI利用不可時でも提案が返ることを担保する
+  it "raises an error when OpenAI request fails" do
+    # 概要: OpenAIリクエストが失敗した場合にエラーになることを確認する
+    # 目的: 不正な提案結果の返却を防ぐ
     place_a = create_place(name: "候補A", genre: "和食", area: "渋谷")
     place_b = create_place(name: "候補B", genre: "洋食", area: "新宿")
 
@@ -109,10 +107,9 @@ RSpec.describe OpenAiRecommendationService, type: :service do
       file.flush
 
       service = described_class.new(api_key_path: file.path, http_client: http_client)
-      result = service.refine(primary_candidates: [place_a, place_b], conditions: { area: "渋谷" })
-
-      expect(result.map { |item| item[:place] }).to eq([place_a, place_b])
-      expect(result.map { |item| item[:reason] }.all?(&:present?)).to be(true)
+      expect do
+        service.refine(primary_candidates: [place_a, place_b], conditions: { condition_text: "静かな雰囲気" })
+      end.to raise_error(described_class::RecommendationError)
     end
   end
 end

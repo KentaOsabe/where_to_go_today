@@ -135,7 +135,7 @@ export const PlaceForm = ({
             <input
               name="area"
               type="text"
-              placeholder="例: 渋谷、三軒茶屋"
+              placeholder="例: 新潟、長岡"
               value={formState.area}
               onChange={onChange}
             />
@@ -149,6 +149,17 @@ export const PlaceForm = ({
               placeholder="例: 3000-5000"
               value={formState.price_range}
               onChange={onChange}
+            />
+          </label>
+
+          <label className="field field--full">
+            <span>行った理由</span>
+            <textarea
+              name="visit_reason"
+              placeholder="例: 仕事終わりに落ち着いて食事できそう"
+              value={formState.visit_reason}
+              onChange={onChange}
+              rows={3}
             />
           </label>
 

@@ -11,6 +11,7 @@ const baseFormState: FormState = {
   genre: '',
   area: '',
   price_range: '',
+  visit_reason: '',
   note: '',
 }
 
@@ -87,5 +88,26 @@ describe('PlaceForm', () => {
     )
 
     expect(screen.getByRole('button', { name: '登録する' })).toBeDisabled()
+  })
+
+  it('行った理由の入力値を保持して表示する', () => {
+    // 概要: 行った理由の入力値がフォームに表示されることを確認する
+    // 目的: 入力エラー時も値が保持されることを保証する
+    render(
+      <PlaceForm
+        formState={{ ...baseFormState, visit_reason: '雰囲気が良さそう' }}
+        errors={{ name: '店名を入力してください' }}
+        isSubmitting={false}
+        submitError={null}
+        duplicatePlaceId={null}
+        onChange={() => undefined}
+        onSubmit={() => undefined}
+        onNavigateToDuplicate={() => undefined}
+      />
+    )
+
+    expect(screen.getByLabelText('行った理由')).toHaveValue(
+      '雰囲気が良さそう'
+    )
   })
 })

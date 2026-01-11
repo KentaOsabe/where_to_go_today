@@ -40,9 +40,7 @@ afterEach(() => {
 
 describe('DecideTodayScreen', () => {
   const conditions: RecommendationConditions = {
-    genre: '和食',
-    area: '渋谷',
-    price_range: '3000-5000',
+    condition_text: 'ジャンル: 和食 / エリア: 渋谷 / 予算帯: 3000-5000',
   }
 
   it('条件入力後に提案結果と理由を表示する', async () => {
@@ -52,19 +50,17 @@ describe('DecideTodayScreen', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: vi.fn().mockResolvedValue({ conditions, recommendations }),
+      json: vi.fn().mockResolvedValue({
+        condition_text: conditions.condition_text,
+        recommendations,
+      }),
     } as unknown as Response)
     vi.stubGlobal('fetch', fetchMock)
 
     renderScreen()
     const user = userEvent.setup()
 
-    await user.type(screen.getByLabelText('ジャンル'), conditions.genre ?? '')
-    await user.type(screen.getByLabelText('エリア'), conditions.area ?? '')
-    await user.type(
-      screen.getByLabelText('予算帯'),
-      conditions.price_range ?? ''
-    )
+    await user.type(screen.getByLabelText('条件'), conditions.condition_text)
     await user.click(screen.getByRole('button', { name: '提案する' }))
 
     expect(await screen.findByText('テスト店')).toBeInTheDocument()
@@ -83,6 +79,7 @@ describe('DecideTodayScreen', () => {
     renderScreen()
     const user = userEvent.setup()
 
+    await user.type(screen.getByLabelText('条件'), conditions.condition_text)
     await user.click(screen.getByRole('button', { name: '提案する' }))
 
     expect(
@@ -104,18 +101,23 @@ describe('DecideTodayScreen', () => {
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: vi.fn().mockResolvedValue({ conditions, recommendations }),
+        json: vi.fn().mockResolvedValue({
+          condition_text: conditions.condition_text,
+          recommendations,
+        }),
       } as unknown as Response)
     vi.stubGlobal('fetch', fetchMock)
 
     renderScreen()
     const user = userEvent.setup()
 
+    await user.type(screen.getByLabelText('条件'), conditions.condition_text)
     await user.click(screen.getByRole('button', { name: '提案する' }))
 
     expect(
       await screen.findByText('提案に失敗しました。再試行してください。')
     ).toBeInTheDocument()
+    expect(screen.getByLabelText('条件')).toHaveValue(conditions.condition_text)
 
     await user.click(screen.getByRole('button', { name: '再試行する' }))
 
@@ -129,8 +131,28 @@ describe('DecideTodayScreen', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      json: vi.fn().mockResolvedValue({ conditions, recommendations: [] }),
+      json: vi.fn().mockResolvedValue({
+        condition_text: conditions.condition_text,
+        recommendations: [],
+      }),
     } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderScreen()
+    const user = userEvent.setup()
+
+    await user.type(screen.getByLabelText('条件'), conditions.condition_text)
+    await user.click(screen.getByRole('button', { name: '提案する' }))
+
+    expect(
+      await screen.findByText('条件を変えて試してください。')
+    ).toBeInTheDocument()
+  })
+
+  it('未入力時は送信をブロックしてエラーを表示する', async () => {
+    // 概要: 条件が未入力の場合に送信が止まることを確認する
+    // 目的: 必須入力のガードとエラーメッセージを表示できるようにする
+    const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
 
     renderScreen()
@@ -139,7 +161,8 @@ describe('DecideTodayScreen', () => {
     await user.click(screen.getByRole('button', { name: '提案する' }))
 
     expect(
-      await screen.findByText('条件を変えて試してください。')
+      screen.getByText('条件を入力してください。')
     ).toBeInTheDocument()
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })
