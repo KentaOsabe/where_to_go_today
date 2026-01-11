@@ -70,3 +70,34 @@
 
 ## ギャップ/懸念（Task 2）
 - なし（Task 2 系の要件・設計に対する未実装は確認できず）。
+
+---
+
+## 対象（Task 4）
+- Task 4.1: バックエンドの提案APIを検証する（RSpec）
+- Task 4.2: フロントエンドの提案画面を検証する（frontend/tests）
+- Task 4.3: 登録/編集フォームの「行った理由」を検証する（frontend/tests）
+
+## 結論（Task 4）
+- Task 4.1〜4.3 は要件/設計どおりにテストで担保されており、完了と判断できる。
+
+## 実装確認（Task 4）
+- Backend: `backend/spec/requests/recommendations_spec.rb`
+  - `condition_text` 必須（422）を検証
+  - OpenAI 出力不正/空の 500 を検証
+  - 最大5件・候補外IDの除外を検証
+- Frontend（提案画面）: `frontend/tests/DecideTodayScreen.test.tsx`
+  - 未入力時の送信ブロックとエラー表示
+  - 入力→提案表示、失敗/0件表示
+- Frontend（登録/編集）:
+  - `frontend/tests/hooks/useRegisterPlace.test.tsx`
+  - `frontend/tests/hooks/useEditPlace.test.tsx`
+  - 行った理由が送信ペイロードに含まれることを検証
+
+## テスト（Task 4）
+### 実行済みコマンド
+- `docker compose run --rm -e BUNDLE_DEPLOYMENT=false -e BUNDLE_FROZEN=false -e RAILS_ENV=test backend sh -c "bundle install && bin/rails db:prepare && bundle exec rspec spec/requests/recommendations_spec.rb"`
+- `docker compose run --rm frontend sh -c "npm install && npm test"`
+
+## ギャップ/懸念（Task 4）
+- なし（Task 4 系の要件・設計に対する未実装は確認できず）。
