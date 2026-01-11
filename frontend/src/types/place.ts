@@ -8,6 +8,7 @@ export type FormState = {
   genre: string
   area: string
   price_range: string
+  visit_reason: string
   note: string
 }
 
@@ -61,5 +62,6 @@ export const initialFormState: FormState = {
   genre: '',
   area: '',
   price_range: '',
+  visit_reason: '',
   note: '',
 }

@@ -41,16 +41,16 @@
   - _Requirements: 2.1, 6.1_
 
 - [ ] 3. 登録・編集画面に「行った理由」を追加する
-- [ ] 3.1 フォームの状態/型を拡張する
+- [x] 3.1 フォームの状態/型を拡張する
   - `FormState` に `visit_reason` を追加する
   - _Requirements: 2.7, 7.1_
 
-- [ ] 3.2 PlaceForm に「行った理由」入力を追加する
+- [x] 3.2 PlaceForm に「行った理由」入力を追加する
   - 任意入力として textarea を追加する
   - 入力エラー時も値を保持する
   - _Requirements: 2.7, 8.2_
 
-- [ ] 3.3 登録/編集の送信ペイロードに `visit_reason` を含める
+- [x] 3.3 登録/編集の送信ペイロードに `visit_reason` を含める
   - create/update の API リクエストに反映する
   - _Requirements: 2.7, 7.1_
 

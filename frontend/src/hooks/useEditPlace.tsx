@@ -51,6 +51,7 @@ const mapPlaceToFormState = (place: Place): FormState => ({
   genre: place.genre ?? '',
   area: place.area ?? '',
   price_range: place.price_range ?? '',
+  visit_reason: place.visit_reason ?? '',
   note: place.note ?? '',
 })
 

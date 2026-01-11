@@ -153,6 +153,17 @@ export const PlaceForm = ({
           </label>
 
           <label className="field field--full">
+            <span>行った理由</span>
+            <textarea
+              name="visit_reason"
+              placeholder="例: 仕事終わりに落ち着いて食事できそう"
+              value={formState.visit_reason}
+              onChange={onChange}
+              rows={3}
+            />
+          </label>
+
+          <label className="field field--full">
             <span>メモ</span>
             <textarea
               name="note"
